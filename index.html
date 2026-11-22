@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>疲劳曲线 Fatigue Curve · 下夜班后，你的反应还剩几成？</title>
+<meta name="description" content="用睡眠研究里的标准方法 PVT 测一测你的警觉度：白天、下夜班、熬夜三种状态对比，画出你自己的疲劳曲线。A PVT-based reaction test that draws your personal fatigue curve.">
+<meta name="theme-color" content="#000000">
+<link rel="canonical" href="https://zhangxiaoxi2025.github.io/fatigue-curve/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://zhangxiaoxi2025.github.io/fatigue-curve/">
+<meta property="og:title" content="疲劳曲线 Fatigue Curve — 下夜班后，你的反应还剩几成？">
+<meta property="og:description" content="Psychomotor Vigilance Task + Go/No-Go. Compare day, post-night-shift and sleep-deprived you. 睡眠研究标准测法，画出你自己的疲劳曲线。">
+<meta property="og:image" content="https://zhangxiaoxi2025.github.io/fatigue-curve/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fatigue Curve — reaction-time distribution with a long slow tail">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Fatigue Curve — how much reaction is left after a night shift?">
+<meta name="twitter:description" content="A PVT-based vigilance test. Day vs post-night-shift vs sleep-deprived. 下夜班后，你的反应还剩几成？">
+<meta name="twitter:image" content="https://zhangxiaoxi2025.github.io/fatigue-curve/og-image.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Cpath d='M8 44 C20 44 22 18 32 18 S44 40 56 30' stroke='%23ff7a45' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#000; --bg2:#0b0b0d; --card:#141416; --line:#26262a; --fg:#f5f5f7; --mut:#86868b; --mut2:#a1a1a6;
+  --day:#5ac8fa; --post:#ffb340; --sd:#ff453a; --go:#30d158; --accent:#ff7a45;
+  --grad:linear-gradient(90deg,#5ac8fa 0%,#ffb340 50%,#ff453a 100%);
+  --r:22px;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;min-height:100dvh;overflow-x:hidden}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+a{color:var(--day);text-decoration:none}
+a:hover{text-decoration:underline}
+.nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:12px max(20px,env(safe-area-inset-left)) 12px max(20px,env(safe-area-inset-right));
+  background:rgba(0,0,0,.72);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.06)}
+.brand{font-weight:600;font-size:15px;letter-spacing:-.01em;display:flex;gap:8px;align-items:center}
+.brand i{display:inline-block;width:18px;height:10px;border-radius:5px;background:var(--grad)}
+.nav-r{display:flex;gap:6px}
+.pill{padding:7px 14px;border-radius:999px;font-size:13px;color:var(--mut2);border:1px solid var(--line);transition:.2s}
+.pill:hover{color:var(--fg);border-color:#3a3a3f}
+.wrap{max-width:980px;margin:0 auto;padding:0 22px}
+.screen{display:none;animation:fade .5s ease}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hero{text-align:center;padding:12vh 0 6vh}
+.eyebrow{font-size:14px;font-weight:600;letter-spacing:.02em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:14px}
+h1{font-size:clamp(44px,9vw,96px);line-height:1.02;font-weight:700;letter-spacing:-.045em}
+h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:clamp(19px,2.6vw,26px);line-height:1.35;color:var(--mut2);font-weight:500;max-width:720px;margin:22px auto 0;letter-spacing:-.01em}
+h2{font-size:clamp(30px,5vw,48px);font-weight:700;letter-spacing:-.035em;line-height:1.08}
+h3{font-size:21px;font-weight:600;letter-spacing:-.02em}
+.lead{color:var(--mut2);font-size:17px;line-height:1.55;margin-top:10px}
+.cta{display:inline-flex;align-items:center;gap:8px;padding:15px 30px;border-radius:999px;background:var(--fg);color:#000;font-weight:600;font-size:17px;transition:transform .15s,opacity .2s}
+.cta:hover{transform:scale(1.03)} .cta:active{transform:scale(.98)}
+.cta[disabled]{opacity:.35;pointer-events:none}
+.cta.ghost{background:transparent;color:var(--fg);border:1px solid #3a3a3f}
+.link{color:var(--day);font-size:17px;font-weight:500}
+.row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:center}
+.section{padding:6vh 0}
+.states{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:28px}
+.state{position:relative;text-align:left;background:var(--card);border:1.5px solid transparent;border-radius:var(--r);padding:22px 20px 20px;transition:.2s;min-height:150px}
+.state:hover{background:#1a1a1d}
+.state .dot{width:12px;height:12px;border-radius:50%;margin-bottom:26px}
+.state b{display:block;font-size:20px;font-weight:600;letter-spacing:-.02em}
+.state span{display:block;color:var(--mut);font-size:14px;margin-top:6px;line-height:1.4}
+.state.sel{border-color:var(--c)}
+.state.sel::after{content:"✓";position:absolute;right:18px;top:16px;color:var(--c);font-weight:700}
+.modes{display:inline-flex;background:var(--card);padding:4px;border-radius:999px;margin-top:22px}
+.modes button{padding:9px 18px;border-radius:999px;font-size:14px;color:var(--mut2);transition:.2s}
+.modes button.on{background:#2c2c2e;color:var(--fg)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+.step{background:var(--card);border-radius:var(--r);padding:22px}
+.step .n{font-size:13px;color:var(--mut);font-weight:600}
+.step h3{margin:8px 0 6px}
+.step p{color:var(--mut2);font-size:15px;line-height:1.5}
+/* test screen */
+#test{position:fixed;inset:0;z-index:50;background:#000;display:none;flex-direction:column;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#test.active{display:flex}
+.t-top{display:flex;justify-content:space-between;align-items:center;padding:16px max(20px,env(safe-area-inset-left));color:var(--mut);font-size:14px}
+.t-bar{height:3px;background:#1c1c1e;margin:0 20px;border-radius:2px;overflow:hidden}
+.t-bar i{display:block;height:100%;width:0;background:var(--grad);transition:width .25s linear}
+.t-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;cursor:pointer}
+.stim{font-variant-numeric:tabular-nums;font-size:clamp(72px,18vw,170px);font-weight:700;letter-spacing:-.04em;min-height:1.1em;line-height:1.1;color:var(--fg)}
+.stim.wait{color:#2c2c2e}
+.stim.fs{color:var(--sd);font-size:clamp(34px,7vw,64px)}
+.stim.ok{color:var(--mut2)}
+.stim.slow{color:var(--post)}
+.t-hint{color:var(--mut);font-size:15px;text-align:center;padding:0 20px;line-height:1.5}
+.gng{width:min(46vw,220px);height:min(46vw,220px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;transition:transform .08s;opacity:0}
+.gng.go{background:var(--go);color:#000;opacity:1}
+.gng.nogo{background:transparent;border:10px solid var(--sd);color:var(--sd);opacity:1;border-radius:28px;transform:rotate(45deg)}
+.gng.nogo span{transform:rotate(-45deg)}
+.gng.fix{opacity:1;width:16px;height:16px;background:#3a3a3c}
+.gng.fb-ok{opacity:1;background:#1c1c1e;color:var(--mut2);font-size:20px}
+.gng.fb-bad{opacity:1;background:#2a0f0d;color:var(--sd);font-size:20px}
+.kbd{display:inline-block;border:1px solid #3a3a3f;border-bottom-width:2px;border-radius:7px;padding:1px 8px;font-size:13px;color:var(--mut2)}
+/* intro overlay inside test */
+.t-intro{max-width:520px;text-align:center;padding:0 24px}
+.t-intro h2{margin-bottom:14px}
+.t-intro p{color:var(--mut2);font-size:17px;line-height:1.55;margin-bottom:26px}
+.demo{display:flex;gap:26px;justify-content:center;margin:-6px 0 26px}
+.demo div{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--mut2);font-size:14px}
+.demo .a{width:56px;height:56px;border-radius:50%;background:var(--go)}
+.demo .b{width:46px;height:46px;border:6px solid var(--sd);border-radius:10px;transform:rotate(45deg);margin:5px}
+/* results */
+.res-head{text-align:center;padding:9vh 0 3vh}
+.tag{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--mut2);background:var(--card);padding:6px 14px;border-radius:999px}
+.tag i{width:8px;height:8px;border-radius:50%}
+.big{font-size:clamp(76px,16vw,150px);font-weight:700;letter-spacing:-.05em;line-height:1;margin-top:20px;font-variant-numeric:tabular-nums}
+.big small{font-size:.32em;color:var(--mut);font-weight:600;letter-spacing:-.01em;margin-left:6px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:30px}
+.stat{background:var(--card);border-radius:18px;padding:18px}
+.stat .k{color:var(--mut);font-size:13px}
+.stat .v{font-size:30px;font-weight:700;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:14px;color:var(--mut);font-weight:500;margin-left:3px}
+.card{background:var(--card);border-radius:var(--r);padding:24px;margin-top:14px}
+.card h3{margin-bottom:6px}
+.card .lead{margin-top:4px;font-size:15px}
+canvas{display:block;width:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;color:var(--mut2);font-size:13px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.sci{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.sci p{color:var(--mut2);font-size:15px;line-height:1.65}
+.sci p b{color:var(--fg);font-weight:600}
+.note{color:var(--mut);font-size:13px;line-height:1.6;margin-top:16px}
+.community{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.cm{background:#0e0e10;border:1px solid var(--line);border-radius:16px;padding:16px}
+.cm .k{font-size:13px;color:var(--mut2);display:flex;gap:6px;align-items:center}
+.cm .k i{width:8px;height:8px;border-radius:50%}
+.cm .v{font-size:24px;font-weight:700;margin-top:8px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.cm .s{font-size:12px;color:var(--mut);margin-top:4px;line-height:1.5}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{padding:10px 18px;border-radius:999px;background:#2c2c2e;font-size:14px;font-weight:500;transition:.2s}
+.btn:hover{background:#3a3a3c}
+.btn.danger{color:var(--sd)}
+.btn.primary{background:var(--fg);color:#000}
+.btn[disabled]{opacity:.4;pointer-events:none}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:500;font-size:12px}
+td .d{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.empty{color:var(--mut);text-align:center;padding:30px 0;font-size:15px}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#2c2c2e;color:var(--fg);padding:12px 20px;border-radius:999px;font-size:14px;opacity:0;transition:.3s;z-index:99;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+footer{color:var(--mut);font-size:12px;line-height:1.7;text-align:center;padding:50px 22px 60px;border-top:1px solid #111;margin-top:6vh}
+.tablewrap{overflow-x:auto}
+@media (max-width:760px){
+  .states,.steps{grid-template-columns:1fr}
+  .state{min-height:auto;display:flex;align-items:center;gap:14px;padding:18px}
+  .state .dot{margin:0;flex:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .sci,.community{grid-template-columns:1fr}
+  .hero{padding:9vh 0 4vh}
+  .card{padding:18px}
+  .hide-m{display:none}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="brand"><i></i><span data-i18n="brand">疲劳曲线</span></div>
+  <div class="nav-r">
+    <button class="pill" id="navHistory" data-i18n="nav_history">我的曲线</button>
+    <button class="pill" id="langBtn">EN</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<section class="screen active" id="home">
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow" data-i18n="eyebrow">精神运动警觉测试 · PVT</div>
+      <h1 data-i18n-html="h1">下夜班后，<br><span class="g">你还剩几成反应？</span></h1>
+      <p class="sub" data-i18n="sub">睡眠研究里测疲劳的标准方法。测几次，画出只属于你的疲劳曲线。</p>
+      <div class="row" style="margin-top:34px">
+        <button class="cta" id="startBtn" data-i18n="start">开始测试</button>
+        <button class="link" id="homeHistory" data-i18n="see_curve">查看我的曲线 ›</button>
+      </div>
+    </div>
+
+    <div class="section" id="pick">
+      <h2 data-i18n="pick_title">你现在是什么状态？</h2>
+      <p class="lead" data-i18n="pick_lead">如实选择，曲线才有意义。每次测试都会按状态保存在这台设备上。</p>
+      <div class="states">
+        <button class="state" data-state="day" style="--c:var(--day)"><div class="dot" style="background:var(--day)"></div><div><b data-i18n="s_day">白天清醒</b><span data-i18n="s_day_d">睡够了，正常白天</span></div></button>
+        <button class="state" data-state="post_night" style="--c:var(--post)"><div class="dot" style="background:var(--post)"></div><div><b data-i18n="s_post">下夜班</b><span data-i18n="s_post_d">刚值完夜班或通宵工作</span></div></button>
+        <button class="state" data-state="sleep_deprived" style="--c:var(--sd)"><div class="dot" style="background:var(--sd)"></div><div><b data-i18n="s_sd">熬夜 / 睡眠不足</b><span data-i18n="s_sd_d">昨晚睡得少或熬了夜</span></div></button>
+      </div>
+      <div style="text-align:center">
+        <div class="modes" id="modes">
+          <button data-mode="3" class="on" data-i18n="m3">标准 3 分钟</button>
+          <button data-mode="1" data-i18n="m1">快速 1 分钟</button>
+        </div>
+        <div style="margin-top:26px"><button class="cta" id="goBtn" disabled data-i18n="begin">选好了，开始</button></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 data-i18n="how_title">两关，测两种疲劳。</h2>
+      <div class="steps">
+        <div class="step"><div class="n">01</div><h3 data-i18n="st1">警觉 PVT</h3><p data-i18n="st1d">数字会在 2–10 秒的随机间隔后跳出来，看到就按。测的是你能不能一直「在线」。</p></div>
+        <div class="step"><div class="n">02</div><h3 data-i18n="st2">忍住不按</h3><p data-i18n="st2d">绿色圆就按，红色方块别按。疲劳不只让人变慢，还会让人更冲动。</p></div>
+        <div class="step"><div class="n">03</div><h3 data-i18n="st3">你的曲线</h3><p data-i18n="st3d">反应时分布、走神次数，以及白天 / 下夜班 / 熬夜三种状态的对比。</p></div>
+      </div>
+      <p class="note" style="text-align:center" data-i18n-html="input_hint">电脑按 <span class="kbd">空格</span>，手机点屏幕任意位置。建议在安静环境、关掉通知后测试。</p>
+    </div>
+  </div>
+  <footer><span data-i18n="disclaimer">仅供娱乐与科普，不是医学诊断。如果你感到严重疲劳，请休息，别开车。</span><br>Made by Xiaoxi Zhang · <a href="https://github.com/zhangxiaoxi2025/fatigue-curve">GitHub</a></footer>
+</section>
+
+<!-- TEST (fullscreen) -->
+<section id="test">
+  <div class="t-top"><span id="tLabel">PVT</span><span id="tTime"></span><button id="quitBtn" class="pill" data-i18n="quit">退出</button></div>
+  <div class="t-bar"><i id="tBar"></i></div>
+  <div class="t-area" id="tArea">
+    <div id="tIntro" class="t-intro"></div>
+    <div id="tStim" class="stim" style="display:none"></div>
+    <div id="tGng" class="gng" style="display:none"><span></span></div>
+    <div id="tHint" class="t-hint"></div>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section class="screen" id="result">
+  <div class="wrap">
+    <div class="res-head">
+      <div class="tag" id="rTag"></div>
+      <div class="big" id="rBig"></div>
+      <p class="lead" id="rLine" style="margin-top:14px"></p>
+    </div>
+    <div class="stats" id="rStats"></div>
+    <div class="card">
+      <h3 data-i18n="hist_t">反应时分布</h3>
+      <p class="lead" data-i18n="hist_d">每根柱子是一个 50 毫秒区间。精神好时柱子挤在一起；累了，右边会拖出一条「慢尾巴」。</p>
+      <canvas id="histC" height="240" style="margin-top:14px"></canvas>
+      <div class="legend"><span><i style="background:#e5e5ea"></i><span data-i18n="lg_ok">正常反应</span></span><span><i style="background:var(--sd)"></i><span data-i18n="lg_lapse">走神 ≥ 500 ms</span></span></div>
+    </div>
+    <div class="sci">
+      <div class="card" style="margin-top:0"><h3 data-i18n="sci1_t">为什么用 PVT？</h3><p data-i18n-html="sci1" style="margin-top:8px"></p></div>
+      <div class="card" style="margin-top:0"><h3 data-i18n="sci2_t">疲劳长什么样？</h3><p data-i18n-html="sci2" style="margin-top:8px"></p></div>
+    </div>
+    <div class="card" id="cmCard">
+      <h3 data-i18n="cm_t">和其他人比一比</h3>
+      <p class="lead" data-i18n="cm_d">只显示数据库里真实提交的汇总。某个状态不足 20 份样本时，只显示「样本不足」。</p>
+      <div class="community" id="cmGrid"></div>
+      <div id="cmYou" class="lead" style="margin-top:12px"></div>
+      <div class="btns"><button class="btn primary" id="submitBtn" data-i18n="submit">匿名提交 / Submit anonymously</button></div>
+      <p class="note" data-i18n="privacy">隐私说明：只有在你点击后才会提交，内容仅为本次成绩摘要（状态、反应时统计、走神次数、误按次数、反应时分布）。不收集姓名、邮箱、账号或设备标识，数据表里也没有 IP 字段。提交后无法撤回，因为我们无法识别哪条是你的。</p>
+    </div>
+    <div class="row" style="margin:34px 0 10px">
+      <button class="cta" id="againBtn" data-i18n="again">再测一次</button>
+      <button class="cta ghost" id="toHistory" data-i18n="see_curve2">查看我的曲线</button>
+    </div>
+    <p class="note" style="text-align:center" data-i18n="disclaimer"></p>
+  </div>
+  <footer>Made by Xiaoxi Zhang · <a href="https://github.com/zhangxiaoxi2025/fatigue-curve">GitHub</a></footer>
+</section>
+
+<!-- HISTORY -->
+<section class="screen" id="history">
+  <div class="wrap">
+    <div class="res-head" style="padding-bottom:1vh">
+      <div class="eyebrow" data-i18n="hx_eye">只保存在这台设备上</div>
+      <h2 data-i18n="hx_t">我的疲劳曲线</h2>
+    </div>
+    <div class="card">
+      <h3 data-i18n="curve_t">随时间变化</h3>
+      <p class="lead" data-i18n="curve_d">每个点是一次测试的 PVT 中位反应时，颜色代表当时的状态。越高越慢。</p>
+      <canvas id="curveC" height="260" style="margin-top:14px"></canvas>
+      <div class="legend" id="stLegend"></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="cmp_t">三种状态对比</h3>
+      <p class="lead" data-i18n="cmp_d">你自己的数据：各状态中位反应时的中位数，以及平均每分钟走神次数。</p>
+      <canvas id="cmpC" height="220" style="margin-top:14px"></canvas>
+    </div>
+    <div class="card">
+      <h3 data-i18n="rec_t">全部记录</h3>
+      <div class="tablewrap"><table id="recT"></table></div>
+      <div class="btns">
+        <button class="btn" id="expBtn" data-i18n="exp">导出 CSV</button>
+        <button class="btn" id="impBtn" data-i18n="imp">导入 CSV</button>
+        <button class="btn danger" id="clrBtn" data-i18n="clr">清除全部数据</button>
+        <input type="file" id="impFile" accept=".csv,text/csv" hidden>
+      </div>
+      <p class="note" data-i18n="local_note">数据存在浏览器本地（localStorage），换设备或清理浏览器会丢失。可以先导出 CSV 备份，再到新设备导入。</p>
+    </div>
+    <div class="row" style="margin:34px 0"><button class="cta" id="hxStart" data-i18n="start">开始测试</button></div>
+  </div>
+  <footer><span data-i18n="disclaimer"></span></footer>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ===== Config ===== */
+const VERSION = '1.0.0';
+// Fill these after creating the Supabase project (publishable/anon key is meant to be public; RLS protects the data).
+const SUPABASE_URL = (window.__FC_TEST && window.__FC_TEST.sbUrl) || '';
+const SUPABASE_KEY = (window.__FC_TEST && window.__FC_TEST.sbKey) || '';
+const MIN_SAMPLES = 20;
+const T = Object.assign({ isiMin:2000, isiMax:10000, timeout:30000, gngTrials:{3:40,1:25} }, window.__FC_TEST || {});
+const STORE_KEY = 'fatigueCurve.v1';
+const STATES = ['day','post_night','sleep_deprived'];
+const SCOLOR = {day:'#5ac8fa', post_night:'#ffb340', sleep_deprived:'#ff453a'};
+
+/* ===== i18n ===== */
+const I = {
+zh:{brand:'疲劳曲线',nav_history:'我的曲线',eyebrow:'精神运动警觉测试 · PVT',h1:'下夜班后，<br><span class="g">你还剩几成反应？</span>',
+sub:'睡眠研究里测疲劳的标准方法。测几次，画出只属于你的疲劳曲线。',start:'开始测试',see_curve:'查看我的曲线 ›',
+pick_title:'你现在是什么状态？',pick_lead:'如实选择，曲线才有意义。每次测试都会按状态保存在这台设备上。',
+s_day:'白天清醒',s_day_d:'睡够了，正常白天',s_post:'下夜班',s_post_d:'刚值完夜班或通宵工作',s_sd:'熬夜 / 睡眠不足',s_sd_d:'昨晚睡得少或熬了夜',
+m3:'标准 3 分钟',m1:'快速 1 分钟',begin:'选好了，开始',how_title:'两关，测两种疲劳。',
+st1:'警觉 PVT',st1d:'数字会在 2–10 秒的随机间隔后跳出来，看到就按。测的是你能不能一直「在线」。',
+st2:'忍住不按',st2d:'绿色圆就按，红色方块别按。疲劳不只让人变慢，还会让人更冲动。',
+st3:'你的曲线',st3d:'反应时分布、走神次数，以及白天 / 下夜班 / 熬夜三种状态的对比。',
+input_hint:'电脑按 <span class="kbd">空格</span>，手机点屏幕任意位置。建议在安静环境、关掉通知后测试。',
+disclaimer:'仅供娱乐与科普，不是医学诊断。如果你感到严重疲劳，请休息，别开车。',quit:'退出',
+pvt_intro_t:'第一关 · 警觉',pvt_intro:'屏幕中间会突然出现一个跳动的数字。看到就立刻按下，越快越好。不要提前按，也不要猜。',
+gng_intro_t:'第二关 · 忍住',gng_intro:'看到绿色圆，立刻按；看到红色方块，忍住别按。速度和准确都算分。',
+go:'GO',nogo:'STOP',tap_start:'按空格或点屏幕开始',wait:'盯住这里…',too_early:'太早了',slow:'慢了',
+hint_pvt:'看到数字就按 · 空格 / 点屏幕',hint_gng:'绿色按 · 红色忍住',miss:'漏了',oops:'误按',ok:'',left:'剩余',trial:'第',
+med:'PVT 中位反应时',ms:'毫秒',mean:'平均反应时',lapses:'走神次数',lapses_s:'≥500 ms',fs:'抢跑',fs_s:'提前按',nogo_err:'误按 (No-Go)',
+nogo_s:'该忍没忍',gng_med:'Go 中位反应时',slow10:'最慢 10%',slow10_s:'平均',trials:'刺激数',
+line_good:'很稳。走神少，分布集中。',line_mid:'有一点点拖尾，可以对比一下其他状态。',line_bad:'慢尾巴很明显，大脑在「断片」。休息一下吧。',
+hist_t:'反应时分布',hist_d:'每根柱子是一个 50 毫秒区间。精神好时柱子挤在一起；累了，右边会拖出一条「慢尾巴」。',lg_ok:'正常反应',lg_lapse:'走神 ≥ 500 ms',
+sci1_t:'为什么用 PVT？',sci1:'<b>精神运动警觉测试（PVT）</b>由 Dinges 和 Powell 在 1985 年提出，是睡眠剥夺研究里最常用的行为指标之一。它简单、几乎没有学习效应，对睡眠不足很敏感。标准版持续 10 分钟，这里是 3 分钟和 1 分钟的简化版，研究中也用过 3 分钟版本（PVT-B）。',
+sci2_t:'疲劳长什么样？',sci2:'疲劳的人<b>不是每次都慢</b>，而是会时不时「断片」：大部分反应还算正常，偶尔一次慢到 500 毫秒以上，这叫<b>走神（lapse）</b>。所以看疲劳要看走神次数和分布右侧那条慢尾巴，而不只是平均值。第二关的误按反映冲动控制，也会随疲劳变差。',
+cm_t:'和其他人比一比',cm_d:'只显示数据库里真实提交的汇总。某个状态不足 20 份样本时，只显示「样本不足」。',
+submit:'匿名提交 / Submit anonymously',submitted:'已匿名提交，谢谢！',submitting:'提交中…',submit_fail:'提交失败，请稍后再试',
+privacy:'隐私说明：只有在你点击后才会提交，内容仅为本次成绩摘要（状态、反应时统计、走神次数、误按次数、反应时分布）。不收集姓名、邮箱、账号或设备标识，数据表里也没有 IP 字段。提交后无法撤回，因为我们无法识别哪条是你的。',
+cm_off:'社区对比还没开启。你的结果只保存在本机。',cm_load:'正在读取汇总…',cm_err:'暂时无法读取社区汇总。',insufficient:'样本不足',samples:'份样本',
+cm_med:'中位数',cm_iqr:'四分位',cm_lpm:'每分钟走神中位数',you_faster:'你的中位反应时快于约 {p}% 的「{s}」参与者（基于 {n} 份真实样本）。',you_top:'你的中位反应时快于约 90% 以上的「{s}」参与者（基于 {n} 份真实样本）。',you_bottom:'你的中位反应时慢于约 90% 的「{s}」参与者（基于 {n} 份真实样本）。',
+again:'再测一次',see_curve2:'查看我的曲线',hx_eye:'只保存在这台设备上',hx_t:'我的疲劳曲线',
+curve_t:'随时间变化',curve_d:'每个点是一次测试的 PVT 中位反应时，颜色代表当时的状态。越高越慢。',
+cmp_t:'三种状态对比',cmp_d:'你自己的数据：各状态中位反应时的中位数，以及平均每分钟走神次数。',
+rec_t:'全部记录',exp:'导出 CSV',imp:'导入 CSV',clr:'清除全部数据',
+local_note:'数据存在浏览器本地（localStorage），换设备或清理浏览器会丢失。可以先导出 CSV 备份，再到新设备导入。',
+no_data:'还没有记录。测一次，曲线就开始生长。',th_time:'时间',th_state:'状态',th_mode:'时长',th_med:'中位 RT',th_lapse:'走神',th_fs:'抢跑',th_nogo:'误按',
+min:'分钟',per_min:'次/分钟',tests:'次',confirm_clear:'确定清除这台设备上的全部测试记录吗？此操作不可恢复。',cleared:'已清除',
+imported:'导入 {n} 条记录',import_bad:'没有识别到有效记录',exported:'已导出',lpm:'走神/分钟',no_rt:'没有有效反应',
+quit_confirm:'退出本次测试？结果不会保存。'},
+en:{brand:'Fatigue Curve',nav_history:'My curve',eyebrow:'Psychomotor Vigilance Task · PVT',h1:'After a night shift,<br><span class="g">how much is left?</span>',
+sub:'The standard fatigue test from sleep research. Take it a few times and draw your own fatigue curve.',start:'Start the test',see_curve:'See my curve ›',
+pick_title:'How are you right now?',pick_lead:'Be honest — the curve only means something if you are. Each test is saved on this device by state.',
+s_day:'Rested daytime',s_day_d:'Slept enough, normal day',s_post:'Post night shift',s_post_d:'Just finished a night shift or all-nighter',s_sd:'Short on sleep',s_sd_d:'Stayed up late or slept little',
+m3:'Standard 3 min',m1:'Quick 1 min',begin:'Begin',how_title:'Two levels. Two kinds of fatigue.',
+st1:'Vigilance (PVT)',st1d:'A counter appears after a random 2–10 s wait. Respond as soon as you see it. It measures whether you stay “online”.',
+st2:'Hold back',st2d:'Green circle: press. Red square: don’t. Fatigue doesn’t just slow you down — it makes you impulsive.',
+st3:'Your curve',st3d:'Reaction-time distribution, lapses, and a comparison of rested, post-shift and sleep-deprived you.',
+input_hint:'Press <span class="kbd">Space</span> on a computer, or tap anywhere on your phone. Find a quiet spot and silence notifications.',
+disclaimer:'For entertainment and education only — not a medical diagnosis. If you feel seriously tired, rest and don’t drive.',quit:'Quit',
+pvt_intro_t:'Level 1 · Vigilance',pvt_intro:'A running counter will suddenly appear in the middle of the screen. Respond the instant you see it. Don’t anticipate or guess.',
+gng_intro_t:'Level 2 · Hold back',gng_intro:'Green circle: press right away. Red square: hold back. Speed and accuracy both count.',
+go:'GO',nogo:'STOP',tap_start:'Press Space or tap to start',wait:'Watch here…',too_early:'Too early',slow:'Slow',
+hint_pvt:'Respond when the number appears · Space / tap',hint_gng:'Green: press · Red: hold',miss:'Missed',oops:'Oops',ok:'',left:'left',trial:'Trial',
+med:'PVT median RT',ms:'ms',mean:'Mean RT',lapses:'Lapses',lapses_s:'≥500 ms',fs:'False starts',fs_s:'too early',nogo_err:'No-Go errors',
+nogo_s:'pressed on red',gng_med:'Go median RT',slow10:'Slowest 10%',slow10_s:'mean',trials:'Stimuli',
+line_good:'Steady. Few lapses, tight distribution.',line_mid:'A little tail. Compare with your other states.',line_bad:'A clear slow tail — your brain is blinking out. Get some rest.',
+hist_t:'Reaction-time distribution',hist_d:'Each bar is a 50 ms bin. When alert, bars bunch together; when tired, a long “slow tail” grows to the right.',lg_ok:'Normal response',lg_lapse:'Lapse ≥ 500 ms',
+sci1_t:'Why the PVT?',sci1:'The <b>Psychomotor Vigilance Task</b> was introduced by Dinges and Powell in 1985 and is one of the most widely used behavioural measures in sleep-deprivation research. It is simple, has minimal learning effects and is sensitive to sleep loss. The standard version lasts 10 minutes; this page uses 3- and 1-minute versions (a 3-minute PVT-B has also been validated in research).',
+sci2_t:'What does fatigue look like?',sci2:'Tired people are <b>not slow every time</b>. Most responses stay fairly normal, but every so often one takes 500 ms or more — a <b>lapse</b>. So fatigue shows up as lapses and a long slow tail on the right of the distribution, not just a higher average. Level 2 errors reflect impulse control, which also worsens with fatigue.',
+cm_t:'Compare with others',cm_d:'Only real aggregates submitted to the database. States with fewer than 20 samples show “Not enough data”.',
+submit:'Submit anonymously / 匿名提交',submitted:'Submitted anonymously — thank you!',submitting:'Submitting…',submit_fail:'Submit failed, please try later',
+privacy:'Privacy: nothing is sent unless you click. Only this test’s summary is sent (state, RT stats, lapses, errors, RT histogram). No name, email, account or device identifier is collected, and the table has no IP column. Submissions can’t be withdrawn because we can’t tell which one is yours.',
+cm_off:'Community comparison isn’t enabled yet. Your results stay on this device.',cm_load:'Loading aggregates…',cm_err:'Couldn’t load community aggregates right now.',insufficient:'Not enough data',samples:'samples',
+cm_med:'median',cm_iqr:'IQR',cm_lpm:'median lapses/min',you_faster:'Your median RT is faster than about {p}% of “{s}” participants (based on {n} real samples).',you_top:'Your median RT is faster than about 90%+ of “{s}” participants (based on {n} real samples).',you_bottom:'Your median RT is slower than about 90% of “{s}” participants (based on {n} real samples).',
+again:'Test again',see_curve2:'See my curve',hx_eye:'Stored only on this device',hx_t:'My fatigue curve',
+curve_t:'Over time',curve_d:'Each dot is one test’s PVT median RT, coloured by state. Higher means slower.',
+cmp_t:'Three states compared',cmp_d:'Your own data: median of median RTs per state, and average lapses per minute.',
+rec_t:'All records',exp:'Export CSV',imp:'Import CSV',clr:'Clear all data',
+local_note:'Data lives in your browser (localStorage) and is lost if you switch devices or clear the browser. Export a CSV backup and import it on a new device.',
+no_data:'No records yet. Take a test and your curve starts growing.',th_time:'Time',th_state:'State',th_mode:'Length',th_med:'Median RT',th_lapse:'Lapses',th_fs:'False st.',th_nogo:'No-Go err.',
+min:'min',per_min:'/min',tests:'tests',confirm_clear:'Delete all test records on this device? This cannot be undone.',cleared:'Cleared',
+imported:'Imported {n} records',import_bad:'No valid records found',exported:'Exported',lpm:'lapses/min',no_rt:'No valid responses',
+quit_confirm:'Quit this test? Results won’t be saved.'}
+};
+let LANG = localStorage.getItem('fatigueCurve.lang') || ((navigator.language||'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en');
+if (!I[LANG]) LANG = 'zh';
+const t = (k, v) => { let s = (I[LANG][k] ?? I.zh[k] ?? k); if (v) for (const x in v) s = s.replace('{'+x+'}', v[x]); return s; };
+const $ = s => document.querySelector(s);
+const SNAME = s => t({day:'s_day',post_night:'s_post',sleep_deprived:'s_sd'}[s]);
+
+function applyLang(){
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-html]').forEach(el => el.innerHTML = t(el.dataset.i18nHtml));
+  $('#langBtn').textContent = LANG === 'zh' ? 'EN' : '中文';
+  if ($('#result').classList.contains('active') && LAST) renderResult(LAST);
+  if ($('#history').classList.contains('active')) renderHistory();
+}
+$('#langBtn').onclick = () => { LANG = LANG === 'zh' ? 'en' : 'zh'; localStorage.setItem('fatigueCurve.lang', LANG); applyLang(); };
+
+/* ===== Navigation ===== */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+  window.scrollTo(0,0);
+  if (id === 'history') renderHistory();
+}
+let SEL = { state:null, mode:3 };
+document.querySelectorAll('.state').forEach(b => b.onclick = () => {
+  SEL.state = b.dataset.state;
+  document.querySelectorAll('.state').forEach(x => x.classList.toggle('sel', x === b));
+  $('#goBtn').disabled = false;
+});
+document.querySelectorAll('#modes button').forEach(b => b.onclick = () => {
+  SEL.mode = +b.dataset.mode;
+  document.querySelectorAll('#modes button').forEach(x => x.classList.toggle('on', x === b));
+});
+const toPick = () => { show('home'); setTimeout(()=>$('#pick').scrollIntoView({behavior:'smooth'}),50); };
+$('#startBtn').onclick = toPick; $('#hxStart').onclick = toPick; $('#againBtn').onclick = toPick;
+$('#homeHistory').onclick = () => show('history'); $('#navHistory').onclick = () => show('history'); $('#toHistory').onclick = () => show('history');
+$('#goBtn').onclick = () => { if (SEL.state) startSession(); };
+
+function toast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('on'),2200); }
+
+/* ===== Input ===== */
+let onResp = null;
+document.addEventListener('keydown', e => {
+  if ((e.code === 'Space' || e.key === ' ') && $('#test').classList.contains('active')) {
+    e.preventDefault(); if (!e.repeat && onResp) onResp(performance.now());
+  } else if (e.key === 'Escape' && $('#test').classList.contains('active')) quitTest();
+});
+$('#tArea').addEventListener('pointerdown', e => { e.preventDefault(); if (onResp) onResp(performance.now()); });
+$('#quitBtn').addEventListener('pointerdown', e => e.stopPropagation());
+$('#quitBtn').onclick = () => quitTest();
+
+/* ===== Test session ===== */
+let timers = [], raf = 0, sessionLive = false;
+const clearAll = () => { timers.forEach(clearTimeout); timers = []; cancelAnimationFrame(raf); };
+const later = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); return id; };
+const rand = (a,b) => a + Math.random()*(b-a);
+let wakeLock = null;
+
+function quitTest(){
+  if (!confirm(t('quit_confirm'))) return;
+  endTest(); show('home');
+}
+function endTest(){
+  clearAll(); onResp = null; sessionLive = false;
+  $('#test').classList.remove('active'); document.body.style.overflow='';
+  if (wakeLock) { wakeLock.release().catch(()=>{}); wakeLock = null; }
+}
+async function startSession(){
+  sessionLive = true;
+  $('#test').classList.add('active'); document.body.style.overflow='hidden';
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
+  const pvt = await runIntro('pvt').then(runPVT);
+  if (!sessionLive) return;
+  const gng = await runIntro('gng').then(runGNG);
+  if (!sessionLive) return;
+  endTest();
+  const rec = buildRecord(pvt, gng);
+  saveRecord(rec); LAST = rec; renderResult(rec); show('result');
+}
+function setView({intro=false, stim=false, gng=false}){
+  $('#tIntro').style.display = intro ? '' : 'none';
+  $('#tStim').style.display = stim ? '' : 'none';
+  $('#tGng').style.display = gng ? '' : 'none';
+}
+function runIntro(kind){
+  return new Promise(res => {
+    clearAll();
+    $('#tLabel').textContent = kind === 'pvt' ? 'PVT · 1/2' : 'Go/No-Go · 2/2';
+    $('#tBar').style.width = '0'; $('#tTime').textContent = '';
+    const demo = kind === 'gng' ? `<div class="demo"><div><i class="a"></i>${t('go')}</div><div><i class="b"></i>${t('nogo')}</div></div>` : '';
+    $('#tIntro').innerHTML = `<h2>${t(kind+'_intro_t')}</h2><p>${t(kind+'_intro')}</p>${demo}<div class="cta">${t('tap_start')}</div>`;
+    $('#tHint').textContent = '';
+    setView({intro:true});
+    later(() => { onResp = () => { onResp = null; res(); }; }, 400);
+  });
+}
+function fmtTime(ms){ const s=Math.max(0,Math.ceil(ms/1000)); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+
+function runPVT(){
+  return new Promise(res => {
+    const dur = (T.pvtDuration || SEL.mode*60000);
+    const st = { rts:[], fs:0, n:0, phase:'idle', t0:0 };
+    const el = $('#tStim'); el.className='stim wait'; el.textContent='0000'; setView({stim:true});
+    $('#tHint').textContent = t('hint_pvt');
+    const start = performance.now(), end = start + dur;
+    const prog = () => { const p=Math.min(1,(performance.now()-start)/dur); $('#tBar').style.width=(p*100)+'%'; $('#tTime').textContent=fmtTime(end-performance.now()); if(p<1&&sessionLive) later(prog,250); };
+    prog();
+    function schedule(){
+      if (!sessionLive) return;
+      if (performance.now() >= end) { onResp = null; return res(st); }
+      st.phase = 'wait'; el.className = 'stim wait'; el.textContent = '0000';
+      later(fire, rand(T.isiMin, T.isiMax));
+    }
+    function fire(){
+      st.phase = 'stim'; st.n++; st.t0 = performance.now(); el.className = 'stim';
+      const tick = () => { if (st.phase !== 'stim') return; el.textContent = String(Math.round(performance.now()-st.t0)).padStart(4,'0'); raf = requestAnimationFrame(tick); };
+      tick();
+      st.to = later(() => { if (st.phase==='stim'){ st.phase='fb'; st.rts.push(T.timeout); el.className='stim slow'; el.textContent=t('slow'); later(schedule,1000);} }, T.timeout);
+    }
+    onResp = (now) => {
+      if (st.phase === 'wait') {           // pressed before stimulus => false start, restart ISI
+        clearAll(); st.fs++; st.phase='fb'; el.className='stim fs'; el.textContent=t('too_early'); prog(); later(schedule, 1000);
+      } else if (st.phase === 'stim') {
+        cancelAnimationFrame(raf); clearTimeout(st.to);
+        const rt = now - st.t0; st.phase = 'fb';
+        if (rt < 100) { st.fs++; el.className='stim fs'; el.textContent=t('too_early'); }
+        else { st.rts.push(rt); el.className = rt >= 500 ? 'stim slow' : 'stim ok'; el.textContent = Math.round(rt); }
+        later(schedule, 1000);
+      }
+    };
+    later(schedule, 600);
+  });
+}
+
+function runGNG(){
+  return new Promise(res => {
+    const N = T.gngTrials[SEL.mode] || 40, nNo = Math.round(N*0.2);
+    let seq = Array(N-nNo).fill('go').concat(Array(nNo).fill('nogo'));
+    for (let i=seq.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [seq[i],seq[j]]=[seq[j],seq[i]]; }
+    // first 2 trials are go so people warm up
+    for (let k=0;k<2;k++) if (seq[k]==='nogo'){ const j=seq.findIndex((x,i)=>i>1&&x==='go'); [seq[k],seq[j]]=[seq[j],seq[k]]; }
+    const st = { goRts:[], commission:0, omission:0, premature:0, i:0, phase:'fix', t0:0 };
+    const el = $('#tGng'), sp = el.querySelector('span'); setView({gng:true});
+    $('#tHint').textContent = t('hint_gng');
+    function next(){
+      if (!sessionLive) return;
+      if (st.i >= N) { onResp = null; return res(st); }
+      $('#tBar').style.width = (st.i/N*100)+'%'; $('#tTime').textContent = `${st.i+1}/${N}`;
+      st.phase='fix'; el.className='gng fix'; sp.textContent='';
+      later(stim, rand(T.gngIsiMin||700, T.gngIsiMax||1600));
+    }
+    function stim(){
+      const kind = seq[st.i]; st.phase = kind; st.t0 = performance.now();
+      el.className = 'gng ' + kind; sp.textContent = t(kind);
+      st.to = later(() => {   // response window 800 ms
+        if (st.phase==='go'){ st.omission++; fb(false, t('miss')); }
+        else if (st.phase==='nogo'){ fb(true, '✓'); }
+      }, 800);
+    }
+    function fb(ok, txt){ st.phase='fb'; st.i++; el.className = 'gng ' + (ok?'fb-ok':'fb-bad'); sp.textContent = txt; later(next, ok ? 350 : 650); }
+    onResp = (now) => {
+      if (st.phase==='fix'){ st.premature++; }
+      else if (st.phase==='go'){ clearTimeout(st.to); const rt=now-st.t0; st.goRts.push(rt); fb(true, Math.round(rt)); }
+      else if (st.phase==='nogo'){ clearTimeout(st.to); st.commission++; fb(false, t('oops')); }
+    };
+    later(next, 500);
+  });
+}
+
+/* ===== Stats ===== */
+const median = a => { if(!a.length) return null; const s=[...a].sort((x,y)=>x-y), m=s.length>>1; return s.length%2 ? s[m] : (s[m-1]+s[m])/2; };
+const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+const HIST_START=100, HIST_BIN=50, HIST_N=19; // 100..1000 in 50ms bins + overflow (>=1000)
+function hist(rts){ const h=Array(HIST_N).fill(0); rts.forEach(r=>{ let i=Math.floor((r-HIST_START)/HIST_BIN); i=Math.max(0,Math.min(HIST_N-1,i)); h[i]++; }); return h; }
+function buildRecord(p, g){
+  const rts = p.rts, sorted=[...rts].sort((a,b)=>a-b);
+  const k = Math.max(1, Math.round(sorted.length*0.1));
+  return {
+    ts: new Date().toISOString(), state: SEL.state, mode: SEL.mode,
+    median: rts.length ? Math.round(median(rts)) : null, mean: rts.length ? Math.round(mean(rts)) : null,
+    lapses: rts.filter(r=>r>=500).length, fs: p.fs, n: p.n,
+    slow10: rts.length ? Math.round(mean(sorted.slice(-k))) : null,
+    hist: hist(rts),
+    gngMedian: g.goRts.length ? Math.round(median(g.goRts)) : null,
+    nogoErr: g.commission, omission: g.omission, nogoTotal: Math.round((T.gngTrials[SEL.mode]||40)*0.2),
+    submitted: false
+  };
+}
+
+/* ===== Storage ===== */
+const load = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch(e){ return []; } };
+const saveAll = a => localStorage.setItem(STORE_KEY, JSON.stringify(a));
+function saveRecord(r){ const a=load(); a.push(r); saveAll(a); }
+let LAST = null;
+
+/* ===== Canvas helpers ===== */
+function setupCanvas(c){
+  const dpr = window.devicePixelRatio||1, w = c.clientWidth, h = +c.getAttribute('height');
+  c.width = w*dpr; c.height = h*dpr; c.style.height = h+'px';
+  const x = c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h);
+  x.font = '12px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif';
+  return [x,w,h];
+}
+function rr(x,X,Y,W,H,r){ r=Math.min(r,W/2,Math.abs(H)/2); x.beginPath(); x.moveTo(X,Y+H); x.lineTo(X,Y+r); x.quadraticCurveTo(X,Y,X+r,Y); x.lineTo(X+W-r,Y); x.quadraticCurveTo(X+W,Y,X+W,Y+r); x.lineTo(X+W,Y+H); x.closePath(); x.fill(); }
+
+function drawHist(c, h){
+  const [x,w,H] = setupCanvas(c); const L=34,R=8,TP=16,B=28, pw=w-L-R, ph=H-TP-B;
+  const max = Math.max(1,...h), bw = pw/h.length;
+  x.strokeStyle='#26262a'; x.fillStyle='#86868b'; x.lineWidth=1; x.textAlign='right';
+  const step = Math.max(1, Math.ceil(max/4));
+  for (let v=0; v<=max; v+=step){ const y=TP+ph-(v/max)*ph; x.beginPath(); x.moveTo(L,y); x.lineTo(w-R,y); x.stroke(); x.fillText(v,L-8,y+4); }
+  h.forEach((v,i) => {
+    const lo = HIST_START+i*HIST_BIN, bh=(v/max)*ph;
+    x.fillStyle = lo>=500 ? '#ff453a' : '#e5e5ea';
+    if (v) rr(x, L+i*bw+2, TP+ph-bh, bw-4, bh, 4);
+  });
+  // lapse threshold
+  const lx = L + ((500-HIST_START)/HIST_BIN)*bw;
+  x.strokeStyle='#ff453a'; x.setLineDash([4,4]); x.beginPath(); x.moveTo(lx,TP-4); x.lineTo(lx,TP+ph); x.stroke(); x.setLineDash([]);
+  x.fillStyle='#ff453a'; x.textAlign='left'; x.fillText('500 ms', lx+5, TP+8);
+  x.fillStyle='#86868b'; x.textAlign='center';
+  [100,300,500,700,900].forEach(v => x.fillText(v, L+((v-HIST_START)/HIST_BIN)*bw, H-8));
+  x.fillText('1000+', L+(HIST_N-0.5)*bw, H-8);
+}
+
+/* ===== Result ===== */
+function renderResult(r){
+  $('#rTag').innerHTML = `<i style="background:${SCOLOR[r.state]}"></i>${SNAME(r.state)} · ${r.mode} ${t('min')}`;
+  $('#rBig').innerHTML = r.median ? `${r.median}<small>${t('ms')}</small>` : `<small>${t('no_rt')}</small>`;
+  const lpm = r.lapses / r.mode;
+  $('#rLine').textContent = r.median==null ? '' : (lpm<=0.34 && r.median<350) ? t('line_good') : (lpm<=1.5 ? t('line_mid') : t('line_bad'));
+  const S = (k,v,s='') => `<div class="stat"><div class="k">${t(k)}</div><div class="v">${v ?? '–'}<small>${s}</small></div></div>`;
+  $('#rStats').innerHTML =
+    S('mean', r.mean, t('ms')) + S('lapses', r.lapses, t('lapses_s')) + S('fs', r.fs, t('fs_s')) + S('slow10', r.slow10, t('ms')) +
+    S('gng_med', r.gngMedian, t('ms')) + S('nogo_err', `${r.nogoErr}`, `/ ${r.nogoTotal}`) + S('trials', r.n) + S('lpm', lpm.toFixed(1));
+  requestAnimationFrame(() => drawHist($('#histC'), r.hist));
+  const sb = $('#submitBtn');
+  if (!SUPABASE_URL || !SUPABASE_KEY) { sb.style.display='none'; }
+  else { sb.style.display=''; sb.disabled = !!r.submitted || r.median==null; sb.textContent = r.submitted ? t('submitted') : t('submit'); }
+  loadCommunity(r);
+}
+
+/* ===== Supabase (REST, no SDK) ===== */
+function sbHeaders(){
+  const h = { 'apikey': SUPABASE_KEY, 'Content-Type':'application/json' };
+  if (SUPABASE_KEY.startsWith('eyJ')) h['Authorization'] = 'Bearer ' + SUPABASE_KEY;
+  return h;
+}
+async function loadCommunity(r){
+  const g = $('#cmGrid'), you = $('#cmYou'); you.textContent='';
+  if (!SUPABASE_URL || !SUPABASE_KEY) { g.innerHTML = `<div class="lead" style="grid-column:1/-1">${t('cm_off')}</div>`; return; }
+  g.innerHTML = `<div class="lead" style="grid-column:1/-1">${t('cm_load')}</div>`;
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/pvt_aggregate', { method:'POST', headers: sbHeaders(), body:'{}' });
+    if (!res.ok) throw new Error(res.status);
+    const rows = await res.json(), by = {}; rows.forEach(x => by[x.state] = x);
+    g.innerHTML = STATES.map(s => {
+      const a = by[s] || {n:0}, n = +a.n || 0, ok = n >= MIN_SAMPLES && a.median_rt_p50 != null;
+      return `<div class="cm"><div class="k"><i style="background:${SCOLOR[s]}"></i>${SNAME(s)}</div>` +
+        (ok ? `<div class="v">${Math.round(a.median_rt_p50)} ms</div><div class="s">${t('cm_med')} · ${t('cm_iqr')} ${Math.round(a.median_rt_p25)}–${Math.round(a.median_rt_p75)} ms<br>${t('cm_lpm')} ${(+a.lapses_per_min_p50).toFixed(1)} · n=${n}</div>`
+            : `<div class="v" style="color:var(--mut)">${t('insufficient')}</div><div class="s">${n} / ${MIN_SAMPLES} ${t('samples')}</div>`) + `</div>`;
+    }).join('');
+    const a = by[r.state];
+    if (a && +a.n >= MIN_SAMPLES && Array.isArray(a.median_rt_deciles) && r.median != null) {
+      const d = a.median_rt_deciles.map(Number), q=[0.1,.2,.3,.4,.5,.6,.7,.8,.9];
+      let p; // fraction of participants slower than you, interpolated from real deciles
+      if (r.median <= d[0]) p = 0.9; else if (r.median >= d[8]) p = 0.1;
+      else { for (let i=0;i<8;i++) if (r.median>=d[i] && r.median<=d[i+1]) { const f = d[i+1]===d[i]?0:(r.median-d[i])/(d[i+1]-d[i]); p = 1-(q[i]+f*0.1); break; } }
+      const key = r.median <= d[0] ? 'you_top' : r.median >= d[8] ? 'you_bottom' : 'you_faster';
+      you.textContent = t(key, {p:Math.round(p*100), s:SNAME(r.state), n:a.n});
+    }
+  } catch(e) { g.innerHTML = `<div class="lead" style="grid-column:1/-1">${t('cm_err')}</div>`; }
+}
+$('#submitBtn').onclick = async () => {
+  const r = LAST; if (!r || r.submitted || r.median==null) return;
+  const b = $('#submitBtn'); b.disabled = true; b.textContent = t('submitting');
+  const clamp=(v,a,z)=>Math.max(a,Math.min(z,Math.round(v)));
+  const body = {
+    state: r.state, test_type: r.mode === 1 ? 'pvt1_gng' : 'pvt3_gng',
+    median_rt_ms: clamp(r.median,100,30000), mean_rt_ms: clamp(r.mean,100,30000),
+    lapses: clamp(r.lapses,0,300), false_starts: clamp(r.fs,0,300), nogo_errors: clamp(r.nogoErr,0,100),
+    n_trials: clamp(Math.max(r.n,5),5,300), rt_hist: r.hist, client_version: VERSION
+  };
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/pvt_results', { method:'POST', headers: Object.assign(sbHeaders(), {'Prefer':'return=minimal'}), body: JSON.stringify(body) });
+    if (!res.ok) throw new Error(res.status);
+    r.submitted = true;
+    const a = load(); const i = a.findIndex(x => x.ts === r.ts); if (i>=0) { a[i].submitted = true; saveAll(a); }
+    b.textContent = t('submitted'); toast(t('submitted')); loadCommunity(r);
+  } catch(e) { b.disabled = false; b.textContent = t('submit'); toast(t('submit_fail')); }
+};
+
+/* ===== History ===== */
+function renderHistory(){
+  const a = load().sort((x,y)=>x.ts.localeCompare(y.ts));
+  $('#stLegend').innerHTML = STATES.map(s=>`<span><i style="background:${SCOLOR[s]};border-radius:50%"></i>${SNAME(s)}</span>`).join('');
+  const tb = $('#recT');
+  if (!a.length) { tb.innerHTML = `<tr><td class="empty">${t('no_data')}</td></tr>`; }
+  else tb.innerHTML = `<tr><th>${t('th_time')}</th><th>${t('th_state')}</th><th class="hide-m">${t('th_mode')}</th><th>${t('th_med')}</th><th>${t('th_lapse')}</th><th class="hide-m">${t('th_fs')}</th><th class="hide-m">${t('th_nogo')}</th></tr>` +
+    [...a].reverse().map(r => `<tr><td>${fmtDate(r.ts)}</td><td><span class="d" style="background:${SCOLOR[r.state]}"></span>${SNAME(r.state)}</td><td class="hide-m">${r.mode} ${t('min')}</td><td>${r.median ?? '–'}</td><td>${r.lapses}</td><td class="hide-m">${r.fs}</td><td class="hide-m">${r.nogoErr ?? '–'}</td></tr>`).join('');
+  requestAnimationFrame(() => { drawCurve($('#curveC'), a); drawCmp($('#cmpC'), a); });
+}
+function fmtDate(iso){ const d=new Date(iso); const p=n=>String(n).padStart(2,'0'); return `${d.getMonth()+1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+function drawEmpty(x,w,h){ x.fillStyle='#86868b'; x.textAlign='center'; x.font='15px -apple-system,"PingFang SC",sans-serif'; x.fillText(t('no_data'), w/2, h/2); }
+function drawCurve(c, a){
+  const [x,w,H] = setupCanvas(c); const pts = a.filter(r=>r.median!=null);
+  if (!pts.length) return drawEmpty(x,w,H);
+  const L=44,R=14,TP=16,B=30, pw=w-L-R, ph=H-TP-B;
+  let lo = Math.min(...pts.map(p=>p.median)), hi = Math.max(...pts.map(p=>p.median));
+  lo = Math.floor((lo-30)/50)*50; hi = Math.ceil((hi+30)/50)*50; if (hi-lo<100) hi = lo+100;
+  const X = i => L + (pts.length===1 ? pw/2 : i*(pw/(pts.length-1)));
+  const Y = v => TP + ph - (v-lo)/(hi-lo)*ph;
+  x.strokeStyle='#26262a'; x.fillStyle='#86868b'; x.textAlign='right';
+  for (let k=0;k<=4;k++){ const v=lo+(hi-lo)*k/4, y=Y(v); x.beginPath(); x.moveTo(L,y); x.lineTo(w-R,y); x.stroke(); x.fillText(Math.round(v),L-8,y+4); }
+  const g = x.createLinearGradient(L,0,w-R,0); g.addColorStop(0,'#5ac8fa'); g.addColorStop(.5,'#ffb340'); g.addColorStop(1,'#ff453a');
+  x.strokeStyle='rgba(255,255,255,.35)'; x.lineWidth=2; x.beginPath();
+  pts.forEach((p,i)=>{ i?x.lineTo(X(i),Y(p.median)):x.moveTo(X(i),Y(p.median)); }); x.stroke();
+  pts.forEach((p,i)=>{ x.fillStyle=SCOLOR[p.state]; x.beginPath(); x.arc(X(i),Y(p.median),5.5,0,7); x.fill(); x.strokeStyle='#141416'; x.lineWidth=2; x.stroke(); });
+  x.fillStyle='#86868b'; x.textAlign='center'; x.lineWidth=1;
+  const every = Math.ceil(pts.length / Math.max(1, Math.floor(pw/80)));
+  pts.forEach((p,i)=>{ if (i%every===0 || i===pts.length-1) x.fillText(fmtDate(p.ts).split(' ')[0], X(i), H-8); });
+}
+function drawCmp(c, a){
+  const [x,w,H] = setupCanvas(c);
+  const groups = STATES.map(s => { const r=a.filter(z=>z.state===s && z.median!=null); return { s, n:r.length, med: r.length?median(r.map(z=>z.median)):null, lpm: r.length?mean(r.map(z=>z.lapses/z.mode)):null }; });
+  if (!groups.some(g=>g.n)) return drawEmpty(x,w,H);
+  const L=10,R=10,TP=34,B=48, pw=w-L-R, ph=H-TP-B, max = Math.max(...groups.map(g=>g.med||0))*1.15;
+  const cw = pw/3, bw = Math.min(90, cw*0.5);
+  groups.forEach((g,i) => {
+    const cx = L + cw*i + cw/2;
+    x.textAlign='center';
+    if (g.n) {
+      const bh = (g.med/max)*ph; x.fillStyle = SCOLOR[g.s]; rr(x, cx-bw/2, TP+ph-bh, bw, bh, 8);
+      x.fillStyle='#f5f5f7'; x.font='600 15px -apple-system,"PingFang SC",sans-serif'; x.fillText(Math.round(g.med)+' ms', cx, TP+ph-bh-10);
+    } else { x.fillStyle='#3a3a3c'; x.font='13px -apple-system,"PingFang SC",sans-serif'; x.fillText('—', cx, TP+ph-10); }
+    x.fillStyle='#a1a1a6'; x.font='13px -apple-system,"PingFang SC",sans-serif'; x.fillText(SNAME(g.s), cx, H-26);
+    x.fillStyle='#86868b'; x.font='12px -apple-system,"PingFang SC",sans-serif';
+    x.fillText(g.n ? `${g.n} ${t('tests')} · ${g.lpm.toFixed(1)} ${t('lpm')}` : `0 ${t('tests')}`, cx, H-8);
+  });
+}
+
+/* ===== CSV ===== */
+const CSV_COLS = ['timestamp','state','mode_min','pvt_median_ms','pvt_mean_ms','lapses','false_starts','slowest10_ms','n_stimuli','gng_median_ms','nogo_errors','nogo_total','gng_omissions','rt_hist_100_1000plus_50ms'];
+$('#expBtn').onclick = () => {
+  const a = load(); const lines = [CSV_COLS.join(',')];
+  a.forEach(r => lines.push([r.ts,r.state,r.mode,r.median??'',r.mean??'',r.lapses,r.fs,r.slow10??'',r.n,r.gngMedian??'',r.nogoErr??'',r.nogoTotal??'',r.omission??'','"'+(r.hist||[]).join(' ')+'"'].join(',')));
+  const blob = new Blob(['\ufeff'+lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  const u = URL.createObjectURL(blob), el = document.createElement('a');
+  el.href=u; el.download=`fatigue-curve-${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(el); el.click(); el.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),1000); toast(t('exported'));
+};
+$('#impBtn').onclick = () => $('#impFile').click();
+$('#impFile').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  const text = (await f.text()).replace(/^\ufeff/,''); e.target.value='';
+  const rows = text.split(/\r?\n/).filter(Boolean); const head = rows.shift()?.split(',').map(s=>s.trim());
+  if (!head || head[0] !== 'timestamp') return toast(t('import_bad'));
+  const ix = k => head.indexOf(k), num = v => (v===''||v==null||isNaN(+v)) ? null : Math.round(+v);
+  const a = load(), have = new Set(a.map(r=>r.ts)); let added = 0;
+  rows.forEach(line => {
+    const cells = line.match(/("([^"]*)"|[^,]*)(,|$)/g)?.map(c=>c.replace(/,$/,'').replace(/^"|"$/g,'')) || [];
+    const ts = cells[ix('timestamp')], state = cells[ix('state')];
+    if (!ts || isNaN(Date.parse(ts)) || !STATES.includes(state) || have.has(ts)) return;
+    const mode = num(cells[ix('mode_min')]) === 1 ? 1 : 3;
+    const histS = ix('rt_hist_100_1000plus_50ms')>=0 ? (cells[ix('rt_hist_100_1000plus_50ms')]||'') : '';
+    const h = histS.trim() ? histS.trim().split(/\s+/).map(Number).slice(0,HIST_N) : Array(HIST_N).fill(0);
+    a.push({ ts:new Date(ts).toISOString(), state, mode, median:num(cells[ix('pvt_median_ms')]), mean:num(cells[ix('pvt_mean_ms')]),
+      lapses:num(cells[ix('lapses')])||0, fs:num(cells[ix('false_starts')])||0, slow10:num(cells[ix('slowest10_ms')]), n:num(cells[ix('n_stimuli')])||0,
+      gngMedian:num(cells[ix('gng_median_ms')]), nogoErr:num(cells[ix('nogo_errors')]), nogoTotal:num(cells[ix('nogo_total')]), omission:num(cells[ix('gng_omissions')]),
+      hist: h.length===HIST_N && h.every(v=>Number.isFinite(v)) ? h : Array(HIST_N).fill(0), submitted:false });
+    have.add(ts); added++;
+  });
+  if (!added) return toast(t('import_bad'));
+  saveAll(a); renderHistory(); toast(t('imported',{n:added}));
+};
+$('#clrBtn').onclick = () => { if (confirm(t('confirm_clear'))) { localStorage.removeItem(STORE_KEY); renderHistory(); toast(t('cleared')); } };
+
+window.addEventListener('resize', () => { clearTimeout(window._rz); window._rz = setTimeout(() => {
+  if ($('#result').classList.contains('active') && LAST) drawHist($('#histC'), LAST.hist);
+  if ($('#history').classList.contains('active')) renderHistory();
+}, 150); });
+applyLang();
+if (location.hash === '#history') show('history');
+</script>
+</body>
+</html>
