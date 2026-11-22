@@ -131,6 +131,8 @@ canvas{display:block;width:100%}
 .sci p{color:var(--mut2);font-size:15px;line-height:1.65}
 .sci p b{color:var(--fg);font-weight:600}
 .note{color:var(--mut);font-size:13px;line-height:1.6;margin-top:16px}
+.grade .g-row{display:flex;gap:20px;align-items:center}
+.g-letter{flex:none;width:92px;height:92px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:800;letter-spacing:-.04em;background:#1c1c1e}
 .community{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
 .cm{background:#0e0e10;border:1px solid var(--line);border-radius:16px;padding:16px}
 .cm .k{font-size:13px;color:var(--mut2);display:flex;gap:6px;align-items:center}
@@ -196,8 +198,8 @@ footer{color:var(--mut);font-size:12px;line-height:1.7;text-align:center;padding
       </div>
       <div style="text-align:center">
         <div class="modes" id="modes">
-          <button data-mode="3" class="on" data-i18n="m3">标准 3 分钟</button>
-          <button data-mode="1" data-i18n="m1">快速 1 分钟</button>
+          <button data-mode="1" class="on" data-i18n="m1">快速 · 10 次</button>
+          <button data-mode="3" data-i18n="m3">标准 3 分钟</button>
         </div>
         <div style="margin-top:26px"><button class="cta" id="goBtn" disabled data-i18n="begin">选好了，开始</button></div>
       </div>
@@ -235,6 +237,14 @@ footer{color:var(--mut);font-size:12px;line-height:1.7;text-align:center;padding
       <div class="tag" id="rTag"></div>
       <div class="big" id="rBig"></div>
       <p class="lead" id="rLine" style="margin-top:14px"></p>
+    </div>
+    <div class="card grade" id="gCard">
+      <div class="g-row"><div class="g-letter" id="gLetter">–</div><div><h3 data-i18n="g_t">参考等级</h3><p class="lead" id="gDesc"></p><p class="note" id="gBy" style="margin-top:6px"></p></div></div>
+      <canvas id="gScale" height="100" style="margin-top:14px"></canvas>
+      <p class="note" data-i18n="g_d"></p>
+      <p class="note" data-i18n="g_bands"></p>
+      <p class="note"><span data-i18n="g_src"></span> <a href="https://doi.org/10.3389/fnins.2020.00754" target="_blank" rel="noopener">doi:10.3389/fnins.2020.00754</a> · <a href="https://doi.org/10.5665/SLEEP.1132" target="_blank" rel="noopener">doi:10.5665/SLEEP.1132</a> · <a href="https://humanbenchmark.com/tests/reactiontime/statistics" target="_blank" rel="noopener">humanbenchmark.com</a></p>
+      <p class="note" id="gDev"></p>
     </div>
     <div class="stats" id="rStats"></div>
     <div class="card">
@@ -303,12 +313,13 @@ footer{color:var(--mut);font-size:12px;line-height:1.7;text-align:center;padding
 <script>
 'use strict';
 /* ===== Config ===== */
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 // Supabase publishable key is meant to be public; RLS + column grants protect the data (see supabase/schema.sql).
 const SUPABASE_URL = (window.__FC_TEST && window.__FC_TEST.sbUrl) || 'https://kjyyyphkqpwiiemkharm.supabase.co';
 const SUPABASE_KEY = (window.__FC_TEST && window.__FC_TEST.sbKey) || 'sb_publishable_iABev9WOpTs-SZvmaCJI0g_Ve_Lrz9b';
 const MIN_SAMPLES = 20;
-const T = Object.assign({ isiMin:2000, isiMax:10000, timeout:30000, gngTrials:{3:40,1:25} }, window.__FC_TEST || {});
+// mode 1 = quick: 10 PVT trials (ISI 2–5 s, ~50 s) + 20 Go/No-Go trials; mode 3 = standard: 3-min PVT (ISI 2–10 s) + 30 Go/No-Go trials
+const T = Object.assign({ isi:{1:[2000,5000],3:[2000,10000]}, pvtTrials:{1:10}, timeout:30000, gngTrials:{3:30,1:20} }, window.__FC_TEST || {});
 const STORE_KEY = 'fatigueCurve.v1';
 const STATES = ['day','post_night','sleep_deprived'];
 const SCOLOR = {day:'#5ac8fa', post_night:'#ffb340', sleep_deprived:'#ff453a'};
@@ -319,10 +330,10 @@ zh:{brand:'疲劳曲线',nav_history:'我的曲线',eyebrow:'精神运动警觉�
 sub:'睡眠研究里测疲劳的标准方法。测几次，画出只属于你的疲劳曲线。',start:'开始测试',see_curve:'查看我的曲线 ›',
 pick_title:'你现在是什么状态？',pick_lead:'如实选择，曲线才有意义。每次测试都会按状态保存在这台设备上。',
 s_day:'白天清醒',s_day_d:'睡够了，正常白天',s_post:'下夜班',s_post_d:'刚值完夜班或通宵工作',s_sd:'熬夜 / 睡眠不足',s_sd_d:'昨晚睡得少或熬了夜',
-m3:'标准 3 分钟',m1:'快速 1 分钟',begin:'选好了，开始',how_title:'两关，测两种疲劳。',
-st1:'警觉 PVT',st1d:'数字会在 2–10 秒的随机间隔后跳出来，看到就按。测的是你能不能一直「在线」。',
-st2:'忍住不按',st2d:'绿色圆就按，红色方块别按。疲劳不只让人变慢，还会让人更冲动。',
-st3:'你的曲线',st3d:'反应时分布、走神次数，以及白天 / 下夜班 / 熬夜三种状态的对比。',
+m3:'标准 3 分钟',m1:'快速 · 10 次',mode_q:'快速 10 次',mode_s:'标准 3 分钟',begin:'选好了，开始',how_title:'两关，测两种疲劳。',
+st1:'警觉 PVT',st1d:'数字会在随机时刻跳出来，看到就按。默认 10 次，大约 1 分钟。测的是你能不能一直「在线」。',
+st2:'忍住不按',st2d:'绿色圆就按，红色方块别按，大约 30 秒。疲劳不只让人变慢，还会让人更冲动。',
+st3:'你的曲线',st3d:'对照已发表研究给出 A–D 参考等级，还有反应时分布和三种状态的对比。',
 input_hint:'电脑按 <span class="kbd">空格</span>，手机点屏幕任意位置。建议在安静环境、关掉通知后测试。',
 disclaimer:'仅供娱乐与科普，不是医学诊断。如果你感到严重疲劳，请休息，别开车。',quit:'退出',
 pvt_intro_t:'第一关 · 警觉',pvt_intro:'屏幕中间会突然出现一个跳动的数字。看到就立刻按下，越快越好。不要提前按，也不要猜。',
@@ -333,30 +344,38 @@ med:'PVT 中位反应时',ms:'毫秒',mean:'平均反应时',lapses:'走神次�
 nogo_s:'该忍没忍',gng_med:'Go 中位反应时',slow10:'最慢 10%',slow10_s:'平均',trials:'刺激数',
 line_good:'很稳。走神少，分布集中。',line_mid:'有一点点拖尾，可以对比一下其他状态。',line_bad:'慢尾巴很明显，大脑在「断片」。休息一下吧。',
 hist_t:'反应时分布',hist_d:'每根柱子是一个 50 毫秒区间。精神好时柱子挤在一起；累了，右边会拖出一条「慢尾巴」。',lg_ok:'正常反应',lg_lapse:'走神 ≥ 500 ms',
-sci1_t:'为什么用 PVT？',sci1:'<b>精神运动警觉测试（PVT）</b>由 Dinges 和 Powell 在 1985 年提出，是睡眠剥夺研究里最常用的行为指标之一。它简单、几乎没有学习效应，对睡眠不足很敏感。标准版持续 10 分钟，这里是 3 分钟和 1 分钟的简化版，研究中也用过 3 分钟版本（PVT-B）。',
+sci1_t:'为什么用 PVT？',sci1:'<b>精神运动警觉测试（PVT）</b>由 Dinges 和 Powell 在 1985 年提出，是睡眠剥夺研究里最常用的行为指标之一，简单、对睡眠不足敏感。标准版持续 10 分钟；研究者验证过 3 分钟的简版（PVT-B），时长缩短 70%，敏感度平均只降了约 23%。这里默认是更短的 10 次快速版，方便大家测完，代价是精度更低，想认真对比可以选 3 分钟版。',
 sci2_t:'疲劳长什么样？',sci2:'疲劳的人<b>不是每次都慢</b>，而是会时不时「断片」：大部分反应还算正常，偶尔一次慢到 500 毫秒以上，这叫<b>走神（lapse）</b>。所以看疲劳要看走神次数和分布右侧那条慢尾巴，而不只是平均值。第二关的误按反映冲动控制，也会随疲劳变差。',
+g_t:'参考等级',g_d:'对照已发表研究里的 PVT 数据，按中位反应时和走神比例中较差的一项评级。只是粗略参考，不是诊断。',
+gA:'比文献中睡够的成年人还快',gB:'落在睡够的健康成年人典型范围内',gC:'比睡够的人慢，接近通宵 24 小时后的平均水平',gD:'超出通宵 24 小时人群的典型范围，大脑明显在「断片」',
+g_rt:'中位反应时',g_lapse:'走神比例',g_by:'评级依据',g_na:'有效反应太少，暂不评级',
+g_scale_rest:'睡够 ≈327',g_scale_sd:'通宵24h ≈370',g_scale_ext:'延长睡眠 ≈261',g_scale_hb:'网上点击 273',
+g_bands:'等级边界（由下方文献的均值 ± 标准差推导，属本页自定）：中位反应时 A ≤293 · B ≤360 · C ≤425 · D >425 ms；走神比例 A 0% · B ≤6.1% · C ≤17.4% · D >17.4%。',
+g_src:'来源：Sun 等 2020（睡够 vs 通宵 24 小时：中位 RT 326.7±33.3 vs 369.7±55.7 ms，走神比例 2.5%±3.6% vs 17.4%±15.0%）；Mah 等 2011（大学篮球运动员延长睡眠后中位 RT 287.6→261.4 ms）；Human Benchmark 网页点击反应中位数 273 ms。',
+g_dev:'网页测量有额外延迟：Human Benchmark 估计台式机约 30 ms，手机触屏通常更慢。实验室 PVT 用专用设备，所以网页成绩会偏慢一些，比较时尽量用同一台设备。',
+g_touch:'你在用触屏，成绩通常会比电脑上慢一些。',lapse_pct:'走神比例',
 cm_t:'和其他人比一比',cm_d:'只显示数据库里真实提交的汇总。某个状态不足 20 份样本时，只显示「样本不足」。',
 submit:'匿名提交 / Submit anonymously',submitted:'已匿名提交，谢谢！',submitting:'提交中…',submit_fail:'提交失败，请稍后再试',
 privacy:'隐私说明：只有在你点击后才会提交，内容仅为本次成绩摘要（状态、反应时统计、走神次数、误按次数、反应时分布）。不收集姓名、邮箱、账号或设备标识，数据表里也没有 IP 字段。提交后无法撤回，因为我们无法识别哪条是你的。',
 cm_off:'社区对比还没开启。你的结果只保存在本机。',cm_load:'正在读取汇总…',cm_err:'暂时无法读取社区汇总。',insufficient:'样本不足',samples:'份样本',
-cm_med:'中位数',cm_iqr:'四分位',cm_lpm:'每分钟走神中位数',you_faster:'你的中位反应时快于约 {p}% 的「{s}」参与者（基于 {n} 份真实样本）。',you_top:'你的中位反应时快于约 90% 以上的「{s}」参与者（基于 {n} 份真实样本）。',you_bottom:'你的中位反应时慢于约 90% 的「{s}」参与者（基于 {n} 份真实样本）。',
+cm_med:'中位数',cm_iqr:'四分位',cm_lpm:'每次测试走神中位数（按分钟折算）',you_faster:'你的中位反应时快于约 {p}% 的「{s}」参与者（基于 {n} 份真实样本）。',you_top:'你的中位反应时快于约 90% 以上的「{s}」参与者（基于 {n} 份真实样本）。',you_bottom:'你的中位反应时慢于约 90% 的「{s}」参与者（基于 {n} 份真实样本）。',
 again:'再测一次',see_curve2:'查看我的曲线',hx_eye:'只保存在这台设备上',hx_t:'我的疲劳曲线',
 curve_t:'随时间变化',curve_d:'每个点是一次测试的 PVT 中位反应时，颜色代表当时的状态。越高越慢。',
-cmp_t:'三种状态对比',cmp_d:'你自己的数据：各状态中位反应时的中位数，以及平均每分钟走神次数。',
+cmp_t:'三种状态对比',cmp_d:'你自己的数据：各状态中位反应时的中位数，以及平均走神比例。',
 rec_t:'全部记录',exp:'导出 CSV',imp:'导入 CSV',clr:'清除全部数据',
 local_note:'数据存在浏览器本地（localStorage），换设备或清理浏览器会丢失。可以先导出 CSV 备份，再到新设备导入。',
 no_data:'还没有记录。测一次，曲线就开始生长。',th_time:'时间',th_state:'状态',th_mode:'时长',th_med:'中位 RT',th_lapse:'走神',th_fs:'抢跑',th_nogo:'误按',
 min:'分钟',per_min:'次/分钟',tests:'次',confirm_clear:'确定清除这台设备上的全部测试记录吗？此操作不可恢复。',cleared:'已清除',
-imported:'导入 {n} 条记录',import_bad:'没有识别到有效记录',exported:'已导出',lpm:'走神/分钟',no_rt:'没有有效反应',
+imported:'导入 {n} 条记录',import_bad:'没有识别到有效记录',exported:'已导出',lpm:'走神比例',no_rt:'没有有效反应',
 quit_confirm:'退出本次测试？结果不会保存。'},
 en:{brand:'Fatigue Curve',nav_history:'My curve',eyebrow:'Psychomotor Vigilance Task · PVT',h1:'After a night shift,<br><span class="g">how much is left?</span>',
 sub:'The standard fatigue test from sleep research. Take it a few times and draw your own fatigue curve.',start:'Start the test',see_curve:'See my curve ›',
 pick_title:'How are you right now?',pick_lead:'Be honest — the curve only means something if you are. Each test is saved on this device by state.',
 s_day:'Rested daytime',s_day_d:'Slept enough, normal day',s_post:'Post night shift',s_post_d:'Just finished a night shift or all-nighter',s_sd:'Short on sleep',s_sd_d:'Stayed up late or slept little',
-m3:'Standard 3 min',m1:'Quick 1 min',begin:'Begin',how_title:'Two levels. Two kinds of fatigue.',
-st1:'Vigilance (PVT)',st1d:'A counter appears after a random 2–10 s wait. Respond as soon as you see it. It measures whether you stay “online”.',
-st2:'Hold back',st2d:'Green circle: press. Red square: don’t. Fatigue doesn’t just slow you down — it makes you impulsive.',
-st3:'Your curve',st3d:'Reaction-time distribution, lapses, and a comparison of rested, post-shift and sleep-deprived you.',
+m3:'Standard 3 min',m1:'Quick · 10 trials',mode_q:'Quick 10',mode_s:'Standard 3 min',begin:'Begin',how_title:'Two levels. Two kinds of fatigue.',
+st1:'Vigilance (PVT)',st1d:'A counter appears at random moments. Respond as soon as you see it. 10 trials by default, about a minute. It measures whether you stay “online”.',
+st2:'Hold back',st2d:'Green circle: press. Red square: don’t. About 30 seconds. Fatigue doesn’t just slow you down — it makes you impulsive.',
+st3:'Your curve',st3d:'An A–D reference grade based on published studies, your RT distribution, and rested vs post-shift vs sleep-deprived.',
 input_hint:'Press <span class="kbd">Space</span> on a computer, or tap anywhere on your phone. Find a quiet spot and silence notifications.',
 disclaimer:'For entertainment and education only — not a medical diagnosis. If you feel seriously tired, rest and don’t drive.',quit:'Quit',
 pvt_intro_t:'Level 1 · Vigilance',pvt_intro:'A running counter will suddenly appear in the middle of the screen. Respond the instant you see it. Don’t anticipate or guess.',
@@ -367,21 +386,29 @@ med:'PVT median RT',ms:'ms',mean:'Mean RT',lapses:'Lapses',lapses_s:'≥500 ms',
 nogo_s:'pressed on red',gng_med:'Go median RT',slow10:'Slowest 10%',slow10_s:'mean',trials:'Stimuli',
 line_good:'Steady. Few lapses, tight distribution.',line_mid:'A little tail. Compare with your other states.',line_bad:'A clear slow tail — your brain is blinking out. Get some rest.',
 hist_t:'Reaction-time distribution',hist_d:'Each bar is a 50 ms bin. When alert, bars bunch together; when tired, a long “slow tail” grows to the right.',lg_ok:'Normal response',lg_lapse:'Lapse ≥ 500 ms',
-sci1_t:'Why the PVT?',sci1:'The <b>Psychomotor Vigilance Task</b> was introduced by Dinges and Powell in 1985 and is one of the most widely used behavioural measures in sleep-deprivation research. It is simple, has minimal learning effects and is sensitive to sleep loss. The standard version lasts 10 minutes; this page uses 3- and 1-minute versions (a 3-minute PVT-B has also been validated in research).',
+sci1_t:'Why the PVT?',sci1:'The <b>Psychomotor Vigilance Task</b> was introduced by Dinges and Powell in 1985 and is one of the most widely used behavioural measures in sleep-deprivation research: simple and sensitive to sleep loss. The standard version lasts 10 minutes; a validated 3-minute PVT-B cut duration by 70% while losing on average about 23% of effect size. This page defaults to an even shorter 10-trial quick version so people actually finish it, at the cost of precision. Pick the 3-minute mode for more careful comparisons.',
 sci2_t:'What does fatigue look like?',sci2:'Tired people are <b>not slow every time</b>. Most responses stay fairly normal, but every so often one takes 500 ms or more — a <b>lapse</b>. So fatigue shows up as lapses and a long slow tail on the right of the distribution, not just a higher average. Level 2 errors reflect impulse control, which also worsens with fatigue.',
+g_t:'Reference grade',g_d:'Based on published PVT data, graded by the worse of your median RT and lapse rate. A rough reference, not a diagnosis.',
+gA:'Faster than well-rested adults in the literature',gB:'Within the typical range of well-rested healthy adults',gC:'Slower than rested; near the average after 24 h awake',gD:'Beyond the typical range after 24 h awake — clear lapsing',
+g_rt:'Median RT',g_lapse:'Lapse rate',g_by:'Graded by',g_na:'Too few valid responses to grade',
+g_scale_rest:'rested ≈327',g_scale_sd:'24h awake ≈370',g_scale_ext:'sleep-extended ≈261',g_scale_hb:'web clicks 273',
+g_bands:'Band edges (derived by this page from the mean ± SD in the sources below): median RT A ≤293 · B ≤360 · C ≤425 · D >425 ms; lapse rate A 0% · B ≤6.1% · C ≤17.4% · D >17.4%.',
+g_src:'Sources: Sun et al. 2020 (rested vs 24 h sleep deprivation: median RT 326.7±33.3 vs 369.7±55.7 ms; lapse ratio 2.5%±3.6% vs 17.4%±15.0%); Mah et al. 2011 (college basketball players, median RT 287.6→261.4 ms after sleep extension); Human Benchmark web click reaction median 273 ms.',
+g_dev:'Web timing adds latency: Human Benchmark estimates ~30 ms on desktop, and phone taps tend to be slower. Lab PVTs use dedicated hardware, so web scores run a bit slower. Compare on the same device.',
+g_touch:'You’re on a touchscreen — scores usually run a bit slower than on a computer.',lapse_pct:'Lapse rate',
 cm_t:'Compare with others',cm_d:'Only real aggregates submitted to the database. States with fewer than 20 samples show “Not enough data”.',
 submit:'Submit anonymously / 匿名提交',submitted:'Submitted anonymously — thank you!',submitting:'Submitting…',submit_fail:'Submit failed, please try later',
 privacy:'Privacy: nothing is sent unless you click. Only this test’s summary is sent (state, RT stats, lapses, errors, RT histogram). No name, email, account or device identifier is collected, and the table has no IP column. Submissions can’t be withdrawn because we can’t tell which one is yours.',
 cm_off:'Community comparison isn’t enabled yet. Your results stay on this device.',cm_load:'Loading aggregates…',cm_err:'Couldn’t load community aggregates right now.',insufficient:'Not enough data',samples:'samples',
-cm_med:'median',cm_iqr:'IQR',cm_lpm:'median lapses/min',you_faster:'Your median RT is faster than about {p}% of “{s}” participants (based on {n} real samples).',you_top:'Your median RT is faster than about 90%+ of “{s}” participants (based on {n} real samples).',you_bottom:'Your median RT is slower than about 90% of “{s}” participants (based on {n} real samples).',
+cm_med:'median',cm_iqr:'IQR',cm_lpm:'median lapses per test-minute',you_faster:'Your median RT is faster than about {p}% of “{s}” participants (based on {n} real samples).',you_top:'Your median RT is faster than about 90%+ of “{s}” participants (based on {n} real samples).',you_bottom:'Your median RT is slower than about 90% of “{s}” participants (based on {n} real samples).',
 again:'Test again',see_curve2:'See my curve',hx_eye:'Stored only on this device',hx_t:'My fatigue curve',
 curve_t:'Over time',curve_d:'Each dot is one test’s PVT median RT, coloured by state. Higher means slower.',
-cmp_t:'Three states compared',cmp_d:'Your own data: median of median RTs per state, and average lapses per minute.',
+cmp_t:'Three states compared',cmp_d:'Your own data: median of median RTs per state, and average lapse rate.',
 rec_t:'All records',exp:'Export CSV',imp:'Import CSV',clr:'Clear all data',
 local_note:'Data lives in your browser (localStorage) and is lost if you switch devices or clear the browser. Export a CSV backup and import it on a new device.',
 no_data:'No records yet. Take a test and your curve starts growing.',th_time:'Time',th_state:'State',th_mode:'Length',th_med:'Median RT',th_lapse:'Lapses',th_fs:'False st.',th_nogo:'No-Go err.',
 min:'min',per_min:'/min',tests:'tests',confirm_clear:'Delete all test records on this device? This cannot be undone.',cleared:'Cleared',
-imported:'Imported {n} records',import_bad:'No valid records found',exported:'Exported',lpm:'lapses/min',no_rt:'No valid responses',
+imported:'Imported {n} records',import_bad:'No valid records found',exported:'Exported',lpm:'lapse rate',no_rt:'No valid responses',
 quit_confirm:'Quit this test? Results won’t be saved.'}
 };
 let LANG = localStorage.getItem('fatigueCurve.lang') || ((navigator.language||'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en');
@@ -406,7 +433,7 @@ function show(id){
   window.scrollTo(0,0);
   if (id === 'history') renderHistory();
 }
-let SEL = { state:null, mode:3 };
+let SEL = { state:null, mode:1 };
 document.querySelectorAll('.state').forEach(b => b.onclick = () => {
   SEL.state = b.dataset.state;
   document.querySelectorAll('.state').forEach(x => x.classList.toggle('sel', x === b));
@@ -483,18 +510,20 @@ function fmtTime(ms){ const s=Math.max(0,Math.ceil(ms/1000)); return `${Math.flo
 
 function runPVT(){
   return new Promise(res => {
-    const dur = (T.pvtDuration || SEL.mode*60000);
+    const NT = T.pvtTrials[SEL.mode] || 0;   // fixed trial count (quick mode) or 0 = timed
+    const dur = NT ? Infinity : (T.pvtDuration || SEL.mode*60000);
+    const [isiMin, isiMax] = T.isi[SEL.mode] || [2000,10000];
     const st = { rts:[], fs:0, n:0, phase:'idle', t0:0 };
     const el = $('#tStim'); el.className='stim wait'; el.textContent='0000'; setView({stim:true});
     $('#tHint').textContent = t('hint_pvt');
     const start = performance.now(), end = start + dur;
-    const prog = () => { const p=Math.min(1,(performance.now()-start)/dur); $('#tBar').style.width=(p*100)+'%'; $('#tTime').textContent=fmtTime(end-performance.now()); if(p<1&&sessionLive) later(prog,250); };
+    const prog = () => { if (NT) { $('#tBar').style.width=(st.n/NT*100)+'%'; $('#tTime').textContent=`${Math.min(st.n+1,NT)} / ${NT}`; return; } const p=Math.min(1,(performance.now()-start)/dur); $('#tBar').style.width=(p*100)+'%'; $('#tTime').textContent=fmtTime(end-performance.now()); if(p<1&&sessionLive) later(prog,250); };
     prog();
     function schedule(){
       if (!sessionLive) return;
-      if (performance.now() >= end) { onResp = null; return res(st); }
-      st.phase = 'wait'; el.className = 'stim wait'; el.textContent = '0000';
-      later(fire, rand(T.isiMin, T.isiMax));
+      if ((NT && st.n >= NT) || (!NT && performance.now() >= end)) { onResp = null; $('#tBar').style.width='100%'; return res(st); }
+      prog(); st.phase = 'wait'; el.className = 'stim wait'; el.textContent = '0000';
+      later(fire, rand(isiMin, isiMax));
     }
     function fire(){
       st.phase = 'stim'; st.n++; st.t0 = performance.now(); el.className = 'stim';
@@ -519,7 +548,7 @@ function runPVT(){
 
 function runGNG(){
   return new Promise(res => {
-    const N = T.gngTrials[SEL.mode] || 40, nNo = Math.round(N*0.2);
+    const N = T.gngTrials[SEL.mode] || 20, nNo = Math.round(N*0.2);
     let seq = Array(N-nNo).fill('go').concat(Array(nNo).fill('nogo'));
     for (let i=seq.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [seq[i],seq[j]]=[seq[j],seq[i]]; }
     // first 2 trials are go so people warm up
@@ -532,7 +561,7 @@ function runGNG(){
       if (st.i >= N) { onResp = null; return res(st); }
       $('#tBar').style.width = (st.i/N*100)+'%'; $('#tTime').textContent = `${st.i+1}/${N}`;
       st.phase='fix'; el.className='gng fix'; sp.textContent='';
-      later(stim, rand(T.gngIsiMin||700, T.gngIsiMax||1600));
+      later(stim, rand(T.gngIsiMin||500, T.gngIsiMax||1000));
     }
     function stim(){
       const kind = seq[st.i]; st.phase = kind; st.t0 = performance.now();
@@ -542,7 +571,7 @@ function runGNG(){
         else if (st.phase==='nogo'){ fb(true, '✓'); }
       }, 800);
     }
-    function fb(ok, txt){ st.phase='fb'; st.i++; el.className = 'gng ' + (ok?'fb-ok':'fb-bad'); sp.textContent = txt; later(next, ok ? 350 : 650); }
+    function fb(ok, txt){ st.phase='fb'; st.i++; el.className = 'gng ' + (ok?'fb-ok':'fb-bad'); sp.textContent = txt; later(next, ok ? 300 : 650); }
     onResp = (now) => {
       if (st.phase==='fix'){ st.premature++; }
       else if (st.phase==='go'){ clearTimeout(st.to); const rt=now-st.t0; st.goRts.push(rt); fb(true, Math.round(rt)); }
@@ -567,7 +596,7 @@ function buildRecord(p, g){
     slow10: rts.length ? Math.round(mean(sorted.slice(-k))) : null,
     hist: hist(rts),
     gngMedian: g.goRts.length ? Math.round(median(g.goRts)) : null,
-    nogoErr: g.commission, omission: g.omission, nogoTotal: Math.round((T.gngTrials[SEL.mode]||40)*0.2),
+    nogoErr: g.commission, omission: g.omission, nogoTotal: Math.round((T.gngTrials[SEL.mode]||20)*0.2),
     submitted: false
   };
 }
@@ -610,19 +639,68 @@ function drawHist(c, h){
 
 /* ===== Result ===== */
 function renderResult(r){
-  $('#rTag').innerHTML = `<i style="background:${SCOLOR[r.state]}"></i>${SNAME(r.state)} · ${r.mode} ${t('min')}`;
+  $('#rTag').innerHTML = `<i style="background:${SCOLOR[r.state]}"></i>${SNAME(r.state)} · ${modeName(r.mode)}`;
   $('#rBig').innerHTML = r.median ? `${r.median}<small>${t('ms')}</small>` : `<small>${t('no_rt')}</small>`;
-  const lpm = r.lapses / r.mode;
-  $('#rLine').textContent = r.median==null ? '' : (lpm<=0.34 && r.median<350) ? t('line_good') : (lpm<=1.5 ? t('line_mid') : t('line_bad'));
+  const lp = r.n ? r.lapses / r.n * 100 : 0;
+  const G = grade(r);
+  $('#rLine').textContent = G ? t('g'+G.g) : '';
+  renderGrade(r, G);
   const S = (k,v,s='') => `<div class="stat"><div class="k">${t(k)}</div><div class="v">${v ?? '–'}<small>${s}</small></div></div>`;
   $('#rStats').innerHTML =
     S('mean', r.mean, t('ms')) + S('lapses', r.lapses, t('lapses_s')) + S('fs', r.fs, t('fs_s')) + S('slow10', r.slow10, t('ms')) +
-    S('gng_med', r.gngMedian, t('ms')) + S('nogo_err', `${r.nogoErr}`, `/ ${r.nogoTotal}`) + S('trials', r.n) + S('lpm', lpm.toFixed(1));
+    S('gng_med', r.gngMedian, t('ms')) + S('nogo_err', `${r.nogoErr}`, `/ ${r.nogoTotal}`) + S('trials', r.n) + S('lapse_pct', lp.toFixed(0), '%');
   requestAnimationFrame(() => drawHist($('#histC'), r.hist));
   const sb = $('#submitBtn');
   if (!SUPABASE_URL || !SUPABASE_KEY) { sb.style.display='none'; }
   else { sb.style.display=''; sb.disabled = !!r.submitted || r.median==null; sb.textContent = r.submitted ? t('submitted') : t('submit'); }
   loadCommunity(r);
+}
+
+/* ===== Reference grade (published data; see README for sources) =====
+   Sun et al. 2020, Front Neurosci 14:754 (doi:10.3389/fnins.2020.00754), 7-min PVT:
+     rested median RT 326.7 ± 33.3 ms, lapse ratio 2.5% ± 3.6%; after 24 h awake 369.7 ± 55.7 ms, 17.4% ± 15.0%.
+   Band edges derived here: A ≤ rested mean−1SD (293), B ≤ rested mean+1SD (360), C ≤ 24h-SD mean+1SD (425), else D.
+   Lapse: A 0, B ≤ rested mean+1SD (6.1%), C ≤ 24h-SD mean (17.4%), else D. Final = worse of the two. */
+const modeName = m => m === 1 ? t('mode_q') : t('mode_s');
+const GCOL = {A:'#30d158', B:'#5ac8fa', C:'#ffb340', D:'#ff453a'};
+function grade(r){
+  if (r.median == null || !r.n || r.n < 5) return null;
+  const rt = r.median <= 293 ? 'A' : r.median <= 360 ? 'B' : r.median <= 425 ? 'C' : 'D';
+  const lp = r.lapses / r.n * 100;
+  const lg = lp === 0 ? 'A' : lp <= 6.1 ? 'B' : lp <= 17.4 ? 'C' : 'D';
+  return { g: rt > lg ? rt : lg, rt, lg, lp };
+}
+function renderGrade(r, G){
+  const L = $('#gLetter');
+  if (!G) { L.textContent='–'; L.style.color='var(--mut)'; $('#gDesc').textContent=t('g_na'); $('#gBy').textContent=''; }
+  else {
+    L.textContent = G.g; L.style.color = GCOL[G.g]; L.style.background = GCOL[G.g] + '1f';
+    $('#gDesc').textContent = t('g'+G.g);
+    $('#gBy').textContent = `${t('g_rt')} ${r.median} ms → ${G.rt} · ${t('g_lapse')} ${G.lp.toFixed(0)}% (${r.lapses}/${r.n}) → ${G.lg}`;
+  }
+  const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+  $('#gDev').textContent = t('g_dev') + (touch ? ' ' + t('g_touch') : '');
+  requestAnimationFrame(() => drawScale($('#gScale'), r.median));
+}
+function drawScale(c, you){
+  const [x,w,H] = setupCanvas(c); const L=8,R=8, lo=200, hi=500, y=40, bh=18;
+  const X = v => L + (Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*(w-L-R);
+  [[lo,293,'A'],[293,360,'B'],[360,425,'C'],[425,hi,'D']].forEach(([a,b,g]) => {
+    x.fillStyle = GCOL[g] + '66'; x.fillRect(X(a)+1, y, X(b)-X(a)-2, bh);
+    x.fillStyle = '#f5f5f7'; x.textAlign='center'; x.font='700 12px -apple-system,sans-serif'; x.fillText(g, (X(a)+X(b))/2, y+13);
+  });
+  x.font='11px -apple-system,"PingFang SC",sans-serif';
+  const lab = (v, k, ty) => { x.strokeStyle='#8e8e93'; x.beginPath(); x.moveTo(X(v), ty+4); x.lineTo(X(v), y); x.stroke();
+    const tw = x.measureText(t(k)).width; let lx = Math.max(L+tw/2, Math.min(w-R-tw/2, X(v)));
+    x.fillStyle='#a1a1a6'; x.textAlign='center'; x.fillText(t(k), lx, ty); };
+  lab(261,'g_scale_ext',12); lab(370,'g_scale_sd',12); lab(327,'g_scale_rest',28);
+  x.fillStyle='#86868b'; x.textAlign='left'; x.fillText('200', L, H-6); x.textAlign='right'; x.fillText('500+ ms', w-R, H-6);
+  if (you != null) {
+    const px = X(you); x.fillStyle='#f5f5f7';
+    x.beginPath(); x.moveTo(px, y+bh+3); x.lineTo(px-7, y+bh+13); x.lineTo(px+7, y+bh+13); x.closePath(); x.fill();
+    x.font='600 12px -apple-system,"PingFang SC",sans-serif'; const txt = (LANG==='zh'?'你 ':'You ') + Math.round(you) + ' ms';
+    const tw = x.measureText(txt).width; x.textAlign='center'; x.fillText(txt, Math.max(L+40+tw/2, Math.min(w-R-60-tw/2, px)), H-6);
+  }
 }
 
 /* ===== Supabase (REST, no SDK) ===== */
@@ -682,7 +760,7 @@ function renderHistory(){
   const tb = $('#recT');
   if (!a.length) { tb.innerHTML = `<tr><td class="empty">${t('no_data')}</td></tr>`; }
   else tb.innerHTML = `<tr><th>${t('th_time')}</th><th>${t('th_state')}</th><th class="hide-m">${t('th_mode')}</th><th>${t('th_med')}</th><th>${t('th_lapse')}</th><th class="hide-m">${t('th_fs')}</th><th class="hide-m">${t('th_nogo')}</th></tr>` +
-    [...a].reverse().map(r => `<tr><td>${fmtDate(r.ts)}</td><td><span class="d" style="background:${SCOLOR[r.state]}"></span>${SNAME(r.state)}</td><td class="hide-m">${r.mode} ${t('min')}</td><td>${r.median ?? '–'}</td><td>${r.lapses}</td><td class="hide-m">${r.fs}</td><td class="hide-m">${r.nogoErr ?? '–'}</td></tr>`).join('');
+    [...a].reverse().map(r => `<tr><td>${fmtDate(r.ts)}</td><td><span class="d" style="background:${SCOLOR[r.state]}"></span>${SNAME(r.state)}</td><td class="hide-m">${modeName(r.mode)}</td><td>${r.median ?? '–'}</td><td>${r.lapses}</td><td class="hide-m">${r.fs}</td><td class="hide-m">${r.nogoErr ?? '–'}</td></tr>`).join('');
   requestAnimationFrame(() => { drawCurve($('#curveC'), a); drawCmp($('#cmpC'), a); });
 }
 function fmtDate(iso){ const d=new Date(iso); const p=n=>String(n).padStart(2,'0'); return `${d.getMonth()+1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
@@ -707,7 +785,7 @@ function drawCurve(c, a){
 }
 function drawCmp(c, a){
   const [x,w,H] = setupCanvas(c);
-  const groups = STATES.map(s => { const r=a.filter(z=>z.state===s && z.median!=null); return { s, n:r.length, med: r.length?median(r.map(z=>z.median)):null, lpm: r.length?mean(r.map(z=>z.lapses/z.mode)):null }; });
+  const groups = STATES.map(s => { const r=a.filter(z=>z.state===s && z.median!=null); return { s, n:r.length, med: r.length?median(r.map(z=>z.median)):null, lpm: r.length?mean(r.map(z=>z.n ? z.lapses/z.n*100 : 0)):null }; });
   if (!groups.some(g=>g.n)) return drawEmpty(x,w,H);
   const L=10,R=10,TP=34,B=48, pw=w-L-R, ph=H-TP-B, max = Math.max(...groups.map(g=>g.med||0))*1.15;
   const cw = pw/3, bw = Math.min(90, cw*0.5);
@@ -720,7 +798,7 @@ function drawCmp(c, a){
     } else { x.fillStyle='#3a3a3c'; x.font='13px -apple-system,"PingFang SC",sans-serif'; x.fillText('—', cx, TP+ph-10); }
     x.fillStyle='#a1a1a6'; x.font='13px -apple-system,"PingFang SC",sans-serif'; x.fillText(SNAME(g.s), cx, H-26);
     x.fillStyle='#86868b'; x.font='12px -apple-system,"PingFang SC",sans-serif';
-    x.fillText(g.n ? `${g.n} ${t('tests')} · ${g.lpm.toFixed(1)} ${t('lpm')}` : `0 ${t('tests')}`, cx, H-8);
+    x.fillText(g.n ? `${g.n} ${t('tests')} · ${t('lpm')} ${g.lpm.toFixed(0)}%` : `0 ${t('tests')}`, cx, H-8);
   });
 }
 
