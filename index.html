@@ -346,11 +346,11 @@ line_good:'很稳。走神少，分布集中。',line_mid:'有一点点拖尾，
 hist_t:'反应时分布',hist_d:'每根柱子是一个 50 毫秒区间。精神好时柱子挤在一起；累了，右边会拖出一条「慢尾巴」。',lg_ok:'正常反应',lg_lapse:'走神 ≥ 500 ms',
 sci1_t:'为什么用 PVT？',sci1:'<b>精神运动警觉测试（PVT）</b>由 Dinges 和 Powell 在 1985 年提出，是睡眠剥夺研究里最常用的行为指标之一，简单、对睡眠不足敏感。标准版持续 10 分钟；研究者验证过 3 分钟的简版（PVT-B），时长缩短 70%，敏感度平均只降了约 23%。这里默认是更短的 10 次快速版，方便大家测完，代价是精度更低，想认真对比可以选 3 分钟版。',
 sci2_t:'疲劳长什么样？',sci2:'疲劳的人<b>不是每次都慢</b>，而是会时不时「断片」：大部分反应还算正常，偶尔一次慢到 500 毫秒以上，这叫<b>走神（lapse）</b>。所以看疲劳要看走神次数和分布右侧那条慢尾巴，而不只是平均值。第二关的误按反映冲动控制，也会随疲劳变差。',
-g_t:'参考等级',g_d:'对照已发表研究里的 PVT 数据，按中位反应时和走神比例中较差的一项评级。只是粗略参考，不是诊断。',
+g_t:'参考等级',g_d:'先按中位反应时对照已发表研究里的 PVT 数据定级，每出现一次走神（≥500 ms）降一级，最低 D。抢跑不计入等级。只是粗略参考，不是诊断。',
 gA:'比文献中睡够的成年人还快',gB:'落在睡够的健康成年人典型范围内',gC:'比睡够的人慢，接近通宵 24 小时后的平均水平',gD:'超出通宵 24 小时人群的典型范围，大脑明显在「断片」',
-g_rt:'中位反应时',g_lapse:'走神比例',g_by:'评级依据',g_na:'有效反应太少，暂不评级',
+g_rt:'中位反应时',g_lapse:'走神',g_nolapse:'没有走神，不降级',g_by:'评级依据',g_na:'有效反应太少，暂不评级',
 g_scale_rest:'睡够 ≈327',g_scale_sd:'通宵24h ≈370',g_scale_ext:'延长睡眠 ≈261',g_scale_hb:'网上点击 273',
-g_bands:'等级边界（由下方文献的均值 ± 标准差推导，属本页自定）：中位反应时 A ≤293 · B ≤360 · C ≤425 · D >425 ms；走神比例 A 0% · B ≤6.1% · C ≤17.4% · D >17.4%。',
+g_bands:'等级边界（由下方文献的均值 ± 标准差推导，属本页自定）：中位反应时 A ≤293 · B ≤360 · C ≤425 · D >425 ms；每次走神降一级。',
 g_src:'来源：Sun 等 2020（睡够 vs 通宵 24 小时：中位 RT 326.7±33.3 vs 369.7±55.7 ms，走神比例 2.5%±3.6% vs 17.4%±15.0%）；Mah 等 2011（大学篮球运动员延长睡眠后中位 RT 287.6→261.4 ms）；Human Benchmark 网页点击反应中位数 273 ms。',
 g_dev:'网页测量有额外延迟：Human Benchmark 估计台式机约 30 ms，手机触屏通常更慢。实验室 PVT 用专用设备，所以网页成绩会偏慢一些，比较时尽量用同一台设备。',
 g_touch:'你在用触屏，成绩通常会比电脑上慢一些。',lapse_pct:'走神比例',
@@ -388,11 +388,11 @@ line_good:'Steady. Few lapses, tight distribution.',line_mid:'A little tail. Com
 hist_t:'Reaction-time distribution',hist_d:'Each bar is a 50 ms bin. When alert, bars bunch together; when tired, a long “slow tail” grows to the right.',lg_ok:'Normal response',lg_lapse:'Lapse ≥ 500 ms',
 sci1_t:'Why the PVT?',sci1:'The <b>Psychomotor Vigilance Task</b> was introduced by Dinges and Powell in 1985 and is one of the most widely used behavioural measures in sleep-deprivation research: simple and sensitive to sleep loss. The standard version lasts 10 minutes; a validated 3-minute PVT-B cut duration by 70% while losing on average about 23% of effect size. This page defaults to an even shorter 10-trial quick version so people actually finish it, at the cost of precision. Pick the 3-minute mode for more careful comparisons.',
 sci2_t:'What does fatigue look like?',sci2:'Tired people are <b>not slow every time</b>. Most responses stay fairly normal, but every so often one takes 500 ms or more — a <b>lapse</b>. So fatigue shows up as lapses and a long slow tail on the right of the distribution, not just a higher average. Level 2 errors reflect impulse control, which also worsens with fatigue.',
-g_t:'Reference grade',g_d:'Based on published PVT data, graded by the worse of your median RT and lapse rate. A rough reference, not a diagnosis.',
+g_t:'Reference grade',g_d:'Your median RT is graded against published PVT data, then each lapse (≥500 ms) lowers the grade by one letter, down to D. False starts don’t count. A rough reference, not a diagnosis.',
 gA:'Faster than well-rested adults in the literature',gB:'Within the typical range of well-rested healthy adults',gC:'Slower than rested; near the average after 24 h awake',gD:'Beyond the typical range after 24 h awake — clear lapsing',
-g_rt:'Median RT',g_lapse:'Lapse rate',g_by:'Graded by',g_na:'Too few valid responses to grade',
+g_rt:'Median RT',g_lapse:'lapses',g_nolapse:'no lapses, no downgrade',g_by:'Graded by',g_na:'Too few valid responses to grade',
 g_scale_rest:'rested ≈327',g_scale_sd:'24h awake ≈370',g_scale_ext:'sleep-extended ≈261',g_scale_hb:'web clicks 273',
-g_bands:'Band edges (derived by this page from the mean ± SD in the sources below): median RT A ≤293 · B ≤360 · C ≤425 · D >425 ms; lapse rate A 0% · B ≤6.1% · C ≤17.4% · D >17.4%.',
+g_bands:'Band edges (derived by this page from the mean ± SD in the sources below): median RT A ≤293 · B ≤360 · C ≤425 · D >425 ms; minus one letter per lapse.',
 g_src:'Sources: Sun et al. 2020 (rested vs 24 h sleep deprivation: median RT 326.7±33.3 vs 369.7±55.7 ms; lapse ratio 2.5%±3.6% vs 17.4%±15.0%); Mah et al. 2011 (college basketball players, median RT 287.6→261.4 ms after sleep extension); Human Benchmark web click reaction median 273 ms.',
 g_dev:'Web timing adds latency: Human Benchmark estimates ~30 ms on desktop, and phone taps tend to be slower. Lab PVTs use dedicated hardware, so web scores run a bit slower. Compare on the same device.',
 g_touch:'You’re on a touchscreen — scores usually run a bit slower than on a computer.',lapse_pct:'Lapse rate',
@@ -660,15 +660,16 @@ function renderResult(r){
    Sun et al. 2020, Front Neurosci 14:754 (doi:10.3389/fnins.2020.00754), 7-min PVT:
      rested median RT 326.7 ± 33.3 ms, lapse ratio 2.5% ± 3.6%; after 24 h awake 369.7 ± 55.7 ms, 17.4% ± 15.0%.
    Band edges derived here: A ≤ rested mean−1SD (293), B ≤ rested mean+1SD (360), C ≤ 24h-SD mean+1SD (425), else D.
-   Lapse: A 0, B ≤ rested mean+1SD (6.1%), C ≤ 24h-SD mean (17.4%), else D. Final = worse of the two. */
+   Then each lapse (RT ≥ 500 ms) lowers the grade by one letter, floor D. False starts are shown but not graded. */
 const modeName = m => m === 1 ? t('mode_q') : t('mode_s');
 const GCOL = {A:'#30d158', B:'#5ac8fa', C:'#ffb340', D:'#ff453a'};
 function grade(r){
   if (r.median == null || !r.n || r.n < 5) return null;
   const rt = r.median <= 293 ? 'A' : r.median <= 360 ? 'B' : r.median <= 425 ? 'C' : 'D';
   const lp = r.lapses / r.n * 100;
-  const lg = lp === 0 ? 'A' : lp <= 6.1 ? 'B' : lp <= 17.4 ? 'C' : 'D';
-  return { g: rt > lg ? rt : lg, rt, lg, lp };
+  // each lapse lowers the RT grade by one letter (floor D); false starts do not affect the grade
+  const g = 'ABCD'[Math.min(3, 'ABCD'.indexOf(rt) + r.lapses)];
+  return { g, rt, lp };
 }
 function renderGrade(r, G){
   const L = $('#gLetter');
@@ -676,7 +677,7 @@ function renderGrade(r, G){
   else {
     L.textContent = G.g; L.style.color = GCOL[G.g]; L.style.background = GCOL[G.g] + '1f';
     $('#gDesc').textContent = t('g'+G.g);
-    $('#gBy').textContent = `${t('g_rt')} ${r.median} ms → ${G.rt} · ${t('g_lapse')} ${G.lp.toFixed(0)}% (${r.lapses}/${r.n}) → ${G.lg}`;
+    $('#gBy').textContent = `${t('g_rt')} ${r.median} ms → ${G.rt}` + (r.lapses ? ` · ${t('g_lapse')} ×${r.lapses} → ${G.g}` : ` · ${t('g_nolapse')}`);
   }
   const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
   $('#gDev').textContent = t('g_dev') + (touch ? ' ' + t('g_touch') : '');

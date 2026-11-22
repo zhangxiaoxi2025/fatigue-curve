@@ -41,14 +41,16 @@ The lapse threshold stays at the standard 500 ms so lapse rates are comparable w
 
 ## Reference grade (A–D)
 
-The grade is the **worse** of two sub-grades. The band edges are this page's own choice, derived from the mean ± SD reported by Sun et al. 2020: rested median RT 326.7 ± 33.3 ms and lapse ratio 2.5% ± 3.6%; after 24 h awake, 369.7 ± 55.7 ms and 17.4% ± 15.0% (7-min PVT, lapse > 500 ms).
+1. **Base grade from median RT.** The band edges are this page's own choice, derived from the mean ± SD reported by Sun et al. 2020: rested median RT 326.7 ± 33.3 ms; after 24 h awake, 369.7 ± 55.7 ms (7-min PVT).
+2. **Each lapse (RT ≥ 500 ms) lowers the grade by one letter**, down to D. Example: an RT grade of B with one lapse gives C, and A with one lapse gives B. For context, the same study reports a lapse ratio of 2.5% ± 3.6% when rested versus 17.4% ± 15.0% after 24 h awake, so even one lapse in a short test is notable.
+3. **False starts are shown but don't affect the grade.** On a web page they often come from accidental taps or key bounce rather than fatigue.
 
-| Grade | Median RT | Lapse rate | Meaning |
-|---|---|---|---|
-| A | ≤ 293 ms (rested mean − 1 SD) | 0% | Faster than well-rested adults in the source |
-| B | ≤ 360 ms (rested mean + 1 SD) | ≤ 6.1% (rested mean + 1 SD) | Typical well-rested range |
-| C | ≤ 425 ms (24 h awake mean + 1 SD) | ≤ 17.4% (24 h awake mean) | Slower than rested, near the 24 h-awake average |
-| D | > 425 ms | > 17.4% | Beyond the typical 24 h-awake range |
+| Grade | Median RT | Meaning |
+|---|---|---|
+| A | ≤ 293 ms (rested mean − 1 SD) | Faster than well-rested adults in the source |
+| B | ≤ 360 ms (rested mean + 1 SD) | Typical well-rested range |
+| C | ≤ 425 ms (24 h-awake mean + 1 SD) | Slower than rested, near the 24 h-awake average |
+| D | > 425 ms | Beyond the typical 24 h-awake range |
 
 Other context shown on the page:
 - Mah et al. 2011: college basketball players' PVT median RT went from 287.6 ± 65.9 ms at baseline to 261.4 ± 35.8 ms after weeks of sleep extension (weekly PVT, Table 3).
