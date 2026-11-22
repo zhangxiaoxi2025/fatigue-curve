@@ -1,16 +1,16 @@
-# 疲劳曲线 · Fatigue Curve
+# Fatigue Curve · 疲劳曲线
 
-> 下夜班后，你还剩几成反应？ / How much reaction is left after a night shift?
+> After a night shift, how much reaction is left? A 90-second vigilance test from sleep science.
 
-**Live:** https://zhangxiaoxi2025.github.io/fatigue-curve/
+**Live:** https://zhangxiaoxi2025.github.io/fatigue-curve/  (English by default; switch to 中文 with the toggle in the top-right)
 
-A single-page, bilingual (中文 / English) vigilance test that uses the **Psychomotor Vigilance Task (PVT)**, the standard behavioural test in sleep-deprivation research, plus a Go/No-Go level. Tag each test as *rested daytime*, *post night shift* or *short on sleep*, and watch your own fatigue curve grow.
+A single-page, bilingual (English / 中文) vigilance test that uses the **Psychomotor Vigilance Task (PVT)**, the standard behavioural test in sleep-deprivation research, plus a Go/No-Go level. Tag each test as *rested daytime*, *post night shift* or *short on sleep*, and watch your own fatigue curve grow.
 
 ![Home](screenshots/desktop-home.png)
 
-| Result | My curve | Mobile |
-|---|---|---|
-| ![Result](screenshots/desktop-result.png) | ![History](screenshots/desktop-history.png) | ![Mobile](screenshots/mobile-result.png) |
+| Result | My curve | Mobile | 中文界面 |
+|---|---|---|---|
+| ![Result](screenshots/desktop-result.png) | ![History](screenshots/desktop-history.png) | ![Mobile](screenshots/mobile-result.png) | ![中文](screenshots/desktop-home-zh.png) |
 
 <sub>Screenshots come from an automated simulated run, not real measurements.</sub>
 
@@ -90,6 +90,18 @@ References (all checked against Crossref or Europe PMC):
 3. Serve the folder with any static host, such as GitHub Pages.
 
 If you leave the config empty, the app works fully offline and hides the submit button.
+
+## 中文简介
+
+**下夜班后，你还剩几成反应？** 这是一个约一分半就能测完的网页版警觉测试，测法来自睡眠研究里最常用的精神运动警觉测试（PVT）。界面默认英文，右上角可以切换到中文。
+
+- **第一关 PVT：** 默认 10 次，约 1 分钟。数字在随机时刻出现，看到就按空格或点屏幕。反应 ≥500 ms 记为一次「走神」。也可以选标准 3 分钟版。
+- **第二关 Go/No-Go：** 20 次，约 30 秒。绿色圆就按，红色方块忍住。
+- **结果：** 中位反应时、走神、抢跑、误按和反应时分布图。另外给出 A–D 参考等级：先按中位反应时对照已发表研究（Sun 等 2020：睡够 326.7±33.3 ms，通宵 24 小时 369.7±55.7 ms）定级，每次走神降一级，抢跑不计入。只是粗略参考，不是诊断；网页和手机触屏会让成绩偏慢一些。
+- **疲劳曲线：** 每次测试按「白天清醒 / 下夜班 / 熬夜或睡眠不足」保存在本机，可以导出、导入 CSV。
+- **匿名提交（可选）：** 只提交成绩摘要，不收集任何身份信息。某个状态不足 20 份样本时只显示「样本不足」，绝不显示编造的平均值。
+
+仅供娱乐与科普，不是医学诊断。如果你感到严重疲劳，请休息，别开车。
 
 ## License
 

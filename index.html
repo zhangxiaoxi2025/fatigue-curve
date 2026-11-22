@@ -1,25 +1,25 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>疲劳曲线 Fatigue Curve · 下夜班后，你的反应还剩几成？</title>
-<meta name="description" content="用睡眠研究里的标准方法 PVT 测一测你的警觉度：白天、下夜班、熬夜三种状态对比，画出你自己的疲劳曲线。A PVT-based reaction test that draws your personal fatigue curve.">
+<title>Fatigue Curve · How much reaction is left after a night shift?</title>
+<meta name="description" content="A 90-second vigilance test based on the Psychomotor Vigilance Task (PVT) from sleep research. Compare rested, post-night-shift and sleep-deprived you, get an A–D reference grade from published data, and draw your own fatigue curve. 中文界面可切换。">
 <meta name="theme-color" content="#000000">
 <link rel="canonical" href="https://zhangxiaoxi2025.github.io/fatigue-curve/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zhangxiaoxi2025.github.io/fatigue-curve/">
-<meta property="og:title" content="疲劳曲线 Fatigue Curve — 下夜班后，你的反应还剩几成？">
-<meta property="og:description" content="Psychomotor Vigilance Task + Go/No-Go. Compare day, post-night-shift and sleep-deprived you. 睡眠研究标准测法，画出你自己的疲劳曲线。">
+<meta property="og:title" content="Fatigue Curve — how much reaction is left after a night shift?">
+<meta property="og:description" content="A 90-second PVT + Go/No-Go vigilance test from sleep research. Rested vs post-night-shift vs sleep-deprived, with an A–D grade based on published data.">
 <meta property="og:image" content="https://zhangxiaoxi2025.github.io/fatigue-curve/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Fatigue Curve — reaction-time distribution with a long slow tail">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Fatigue Curve — how much reaction is left after a night shift?">
-<meta name="twitter:description" content="A PVT-based vigilance test. Day vs post-night-shift vs sleep-deprived. 下夜班后，你的反应还剩几成？">
+<meta name="twitter:description" content="A 90-second PVT-based vigilance test. Rested vs post-night-shift vs sleep-deprived, with an A–D grade from published data.">
 <meta name="twitter:image" content="https://zhangxiaoxi2025.github.io/fatigue-curve/og-image.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Cpath d='M8 44 C20 44 22 18 32 18 S44 40 56 30' stroke='%23ff7a45' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
@@ -411,14 +411,15 @@ min:'min',per_min:'/min',tests:'tests',confirm_clear:'Delete all test records on
 imported:'Imported {n} records',import_bad:'No valid records found',exported:'Exported',lpm:'lapse rate',no_rt:'No valid responses',
 quit_confirm:'Quit this test? Results won’t be saved.'}
 };
-let LANG = localStorage.getItem('fatigueCurve.lang') || ((navigator.language||'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en');
-if (!I[LANG]) LANG = 'zh';
+let LANG = localStorage.getItem('fatigueCurve.lang') || 'en';   // English by default; a saved toggle choice wins
+if (!I[LANG]) LANG = 'en';
 const t = (k, v) => { let s = (I[LANG][k] ?? I.zh[k] ?? k); if (v) for (const x in v) s = s.replace('{'+x+'}', v[x]); return s; };
 const $ = s => document.querySelector(s);
 const SNAME = s => t({day:'s_day',post_night:'s_post',sleep_deprived:'s_sd'}[s]);
 
 function applyLang(){
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : 'en';
+  document.title = LANG === 'zh' ? '疲劳曲线 · 下夜班后，你还剩几成反应？' : 'Fatigue Curve · How much reaction is left after a night shift?';
   document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
   document.querySelectorAll('[data-i18n-html]').forEach(el => el.innerHTML = t(el.dataset.i18nHtml));
   $('#langBtn').textContent = LANG === 'zh' ? 'EN' : '中文';
