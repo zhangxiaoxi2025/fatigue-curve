@@ -304,9 +304,9 @@ footer{color:var(--mut);font-size:12px;line-height:1.7;text-align:center;padding
 'use strict';
 /* ===== Config ===== */
 const VERSION = '1.0.0';
-// Fill these after creating the Supabase project (publishable/anon key is meant to be public; RLS protects the data).
-const SUPABASE_URL = (window.__FC_TEST && window.__FC_TEST.sbUrl) || '';
-const SUPABASE_KEY = (window.__FC_TEST && window.__FC_TEST.sbKey) || '';
+// Supabase publishable key is meant to be public; RLS + column grants protect the data (see supabase/schema.sql).
+const SUPABASE_URL = (window.__FC_TEST && window.__FC_TEST.sbUrl) || 'https://kjyyyphkqpwiiemkharm.supabase.co';
+const SUPABASE_KEY = (window.__FC_TEST && window.__FC_TEST.sbKey) || 'sb_publishable_iABev9WOpTs-SZvmaCJI0g_Ve_Lrz9b';
 const MIN_SAMPLES = 20;
 const T = Object.assign({ isiMin:2000, isiMax:10000, timeout:30000, gngTrials:{3:40,1:25} }, window.__FC_TEST || {});
 const STORE_KEY = 'fatigueCurve.v1';
@@ -664,7 +664,7 @@ $('#submitBtn').onclick = async () => {
     state: r.state, test_type: r.mode === 1 ? 'pvt1_gng' : 'pvt3_gng',
     median_rt_ms: clamp(r.median,100,30000), mean_rt_ms: clamp(r.mean,100,30000),
     lapses: clamp(r.lapses,0,300), false_starts: clamp(r.fs,0,300), nogo_errors: clamp(r.nogoErr,0,100),
-    n_trials: clamp(Math.max(r.n,5),5,300), rt_hist: r.hist, client_version: VERSION
+    n_trials: clamp(Math.max(r.n,5),5,300), rt_hist: r.hist, client_version: T.clientVersion || VERSION
   };
   try {
     const res = await fetch(SUPABASE_URL + '/rest/v1/pvt_results', { method:'POST', headers: Object.assign(sbHeaders(), {'Prefer':'return=minimal'}), body: JSON.stringify(body) });
